@@ -148,7 +148,7 @@ def popularity_bias(df, pop_proportion, verbose=False):
     ----------------------------------
     ''')
 
-  return pop_bias
+  return pop_bias, ratings_df_res, items_df, itemIds
 
 def user_mainstreaminess(df, mainstr_thres=0, return_groups=False):
   '''
