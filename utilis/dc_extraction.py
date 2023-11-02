@@ -149,13 +149,6 @@ def popularity_bias(df, pop_proportion, verbose=False):
     ''')
 
   return pop_bias
-def log_density(noUsers, noItems, noRatings):
-  log_density = np.log10(noRatings/(noUsers * noItems))
-  return log_density
-
-def log_shape(noUsers, noItems):
-  log_shape = np.log10(noUsers / noItems)
-  return log_shape
 
 def user_mainstreaminess(df, mainstr_thres=0, return_groups=False):
   '''
@@ -211,3 +204,11 @@ def user_activity(df, proportion_list, return_groups=False):
 
   if return_groups: return df, df['is_active']
   return df
+
+def log_density(noUsers, noItems, noRatings):
+  log_density = np.log10(noRatings/(noUsers * noItems))
+  return log_density
+
+def log_shape(noUsers, noItems):
+  log_shape = np.log10(noUsers / noItems)
+  return log_shape
