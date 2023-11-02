@@ -136,15 +136,15 @@ def popularity_bias(df, pop_proportion, verbose=False):
   if verbose:
     print(f'''
     ----------------------------------
-    Number of Ratings collected by short-head items: {noRatingShort}')
-    Number of Ratings collected by mid-tail items: {noRatingMid}')
-    Number of Ratings collected by distant-tail items: {noRatingDistant}')
-    Number of short-head items: {noShort}')
-    Number of mid-tail items: {noMid}')
-    Number of distant-tail items: {noDistant}')
-    # R/I (short-head items): {noRatingShort/noShort}')
-    # R/I (mid-tail items): {noRatingMid/noMid}')
-    # R/I (distant-tail items): {noRatingDistant/noDistant}')
+    Number of Ratings collected by short-head items: {noRatingShort})
+    Number of Ratings collected by mid-tail items: {noRatingMid})
+    Number of Ratings collected by distant-tail items: {noRatingDistant})
+    Number of short-head items: {noShort})
+    Number of mid-tail items: {noMid})
+    Number of distant-tail items: {noDistant})
+    # R/I (short-head items): {noRatingShort/noShort})
+    # R/I (mid-tail items): {noRatingMid/noMid})
+    # R/I (distant-tail items): {noRatingDistant/noDistant})
     ----------------------------------
     ''')
 
