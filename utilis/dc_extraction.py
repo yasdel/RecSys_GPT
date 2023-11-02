@@ -149,68 +149,6 @@ def popularity_bias(df, pop_proportion, verbose=False):
     ''')
 
   return pop_bias
-# 
-# """
-# # Example
-# %%writefile toy_df.csv
-# UserId,ItemId,rating
-# 1,3,1
-# 1,4,1
-# 1,5,1
-# 1,7,1
-# 1,8,1
-# 2,9,1
-# 2,3,1
-# 2,4,1
-# 2,5,1
-# 2,70,1
-# 3,3,1
-# 3,4,1
-# 3,60,1
-# 3,99,1
-# 3,40,1
-# 4,3,1
-# 4,4,1
-# 4,5,1
-# 4,70,1
-# 4,90,1
-# 5,3,1
-# 5,4,1
-# 5,5,1
-# 5,37,1
-# 5,39,1
-# 6,3,1
-# 6,4,1
-# 6,5,1
-# 6,90,1
-# 6,30,1
-# 
-# toy_df = pd.read_csv('toy_df.csv', header=0, names=["userId","itemId","rating"])
-# pop_proportion = [0.5, 0.4,0.1]
-# popularity_bias(toy_df, pop_proportion, verbose=True)
-# -->
-#    userId  itemId  rating  count  popClass
-# 0       1       3       1      6         0
-# 1       2       3       1      6         0
-# 2       3       3       1      6         0
-# 3       4       3       1      6         0
-# 4       5       3       1      6         0
-# 
-#     ----------------------------------
-#     Number of Ratings collected by short-head items: 12')
-#     Number of Ratings collected by mid-tail items: 14')
-#     Number of Ratings collected by distant-tail items: 4')
-#     Number of short-head items: 2')
-#     Number of mid-tail items: 8')
-#     Number of distant-tail items: 4')
-#     # R/I (short-head items): 6.0')
-#     # R/I (mid-tail items): 1.75')
-#     # R/I (distant-tail items): 1.0')
-#     ----------------------------------
-# 6.0
-# """
-# '' # to avoid echo in output
-
 def log_density(noUsers, noItems, noRatings):
   log_density = np.log10(noRatings/(noUsers * noItems))
   return log_density
