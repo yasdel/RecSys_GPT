@@ -121,35 +121,34 @@ def popularity_segment_flexibleGroup(ratings_df, proportion_list):
 
   return ratings_df_res, items_df, itemIds
 
-# Commented out IPython magic to ensure Python compatibility.
-# def popularity_bias(df, pop_proportion, verbose=False):
-#   ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(df, pop_proportion)
-#   noRatingShort = (ratings_df_res['popClass'] == 0).sum()
-#   noRatingMid = (ratings_df_res['popClass'] == 1).sum()
-#   noRatingDistant = (ratings_df_res['popClass'] == 2).sum()
-#   noShort = (items_df['popClass'] == 0).sum()
-#   noMid = (items_df['popClass'] == 1).sum()
-#   noDistant = (items_df['popClass'] == 2).sum()
-#   r_i_ratio_head = noRatingShort/noShort
-#   r_i_ratio_tail = noRatingDistant/noDistant if noDistant!=0 else noRatingMid/noMid
-#   pop_bias = r_i_ratio_head / r_i_ratio_tail
-# 
-#   if verbose:
-#     print(f'''
-#     ----------------------------------
-#     Number of Ratings collected by short-head items: {noRatingShort}')
-#     Number of Ratings collected by mid-tail items: {noRatingMid}')
-#     Number of Ratings collected by distant-tail items: {noRatingDistant}')
-#     Number of short-head items: {noShort}')
-#     Number of mid-tail items: {noMid}')
-#     Number of distant-tail items: {noDistant}')
-#     # R/I (short-head items): {noRatingShort/noShort}')
-#     # R/I (mid-tail items): {noRatingMid/noMid}')
-#     # R/I (distant-tail items): {noRatingDistant/noDistant}')
-#     ----------------------------------
-#     ''')
-# 
-#   return pop_bias
+def popularity_bias(df, pop_proportion, verbose=False):
+  ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(df, pop_proportion)
+  noRatingShort = (ratings_df_res['popClass'] == 0).sum()
+  noRatingMid = (ratings_df_res['popClass'] == 1).sum()
+  noRatingDistant = (ratings_df_res['popClass'] == 2).sum()
+  noShort = (items_df['popClass'] == 0).sum()
+  noMid = (items_df['popClass'] == 1).sum()
+  noDistant = (items_df['popClass'] == 2).sum()
+  r_i_ratio_head = noRatingShort/noShort
+  r_i_ratio_tail = noRatingDistant/noDistant if noDistant!=0 else noRatingMid/noMid
+  pop_bias = r_i_ratio_head / r_i_ratio_tail
+
+  if verbose:
+    print(f'''
+    ----------------------------------
+    Number of Ratings collected by short-head items: {noRatingShort}')
+    Number of Ratings collected by mid-tail items: {noRatingMid}')
+    Number of Ratings collected by distant-tail items: {noRatingDistant}')
+    Number of short-head items: {noShort}')
+    Number of mid-tail items: {noMid}')
+    Number of distant-tail items: {noDistant}')
+    # R/I (short-head items): {noRatingShort/noShort}')
+    # R/I (mid-tail items): {noRatingMid/noMid}')
+    # R/I (distant-tail items): {noRatingDistant/noDistant}')
+    ----------------------------------
+    ''')
+
+  return pop_bias
 # 
 # """
 # # Example
