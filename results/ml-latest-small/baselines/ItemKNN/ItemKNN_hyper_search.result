@@ -1,0 +1,72 @@
+k:100, shrink:0.0
+Valid result:
+recall@100 : 0.3552    mrr@100 : 0.0975    ndcg@100 : 0.1483    hit@100 : 0.8328    precision@100 : 0.0254
+Test result:
+recall@100 : 0.3704    mrr@100 : 0.1064    ndcg@100 : 0.1554    hit@100 : 0.8393    precision@100 : 0.0263
+
+k:10, shrink:2
+Valid result:
+recall@100 : 0.3448    mrr@100 : 0.1461    ndcg@100 : 0.1551    hit@100 : 0.8475    precision@100 : 0.0261
+Test result:
+recall@100 : 0.3624    mrr@100 : 0.1186    ndcg@100 : 0.1512    hit@100 : 0.859    precision@100 : 0.0266
+
+k:250, shrink:1
+Valid result:
+recall@100 : 0.3568    mrr@100 : 0.1068    ndcg@100 : 0.1512    hit@100 : 0.8377    precision@100 : 0.0254
+Test result:
+recall@100 : 0.3653    mrr@100 : 0.0981    ndcg@100 : 0.1498    hit@100 : 0.8426    precision@100 : 0.0258
+
+k:100, shrink:2
+Valid result:
+recall@100 : 0.3591    mrr@100 : 0.1081    ndcg@100 : 0.1507    hit@100 : 0.841    precision@100 : 0.0259
+Test result:
+recall@100 : 0.3734    mrr@100 : 0.1136    ndcg@100 : 0.1564    hit@100 : 0.8541    precision@100 : 0.0269
+
+k:250, shrink:2
+Valid result:
+recall@100 : 0.3579    mrr@100 : 0.1124    ndcg@100 : 0.1525    hit@100 : 0.8393    precision@100 : 0.0258
+Test result:
+recall@100 : 0.3686    mrr@100 : 0.1027    ndcg@100 : 0.152    hit@100 : 0.8443    precision@100 : 0.0262
+
+k:300, shrink:0.1
+Valid result:
+recall@100 : 0.3483    mrr@100 : 0.0971    ndcg@100 : 0.1455    hit@100 : 0.823    precision@100 : 0.0246
+Test result:
+recall@100 : 0.3603    mrr@100 : 0.1017    ndcg@100 : 0.1495    hit@100 : 0.8295    precision@100 : 0.0252
+
+k:50, shrink:2
+Valid result:
+recall@100 : 0.3522    mrr@100 : 0.1054    ndcg@100 : 0.1483    hit@100 : 0.8426    precision@100 : 0.0261
+Test result:
+recall@100 : 0.3721    mrr@100 : 0.1409    ndcg@100 : 0.1622    hit@100 : 0.8459    precision@100 : 0.027
+
+k:10, shrink:0.5
+Valid result:
+recall@100 : 0.3441    mrr@100 : 0.1228    ndcg@100 : 0.1513    hit@100 : 0.823    precision@100 : 0.0248
+Test result:
+recall@100 : 0.3588    mrr@100 : 0.1066    ndcg@100 : 0.1488    hit@100 : 0.8311    precision@100 : 0.0255
+
+k:10, shrink:0.1
+Valid result:
+recall@100 : 0.3453    mrr@100 : 0.1215    ndcg@100 : 0.1513    hit@100 : 0.8295    precision@100 : 0.0248
+Test result:
+recall@100 : 0.3559    mrr@100 : 0.1002    ndcg@100 : 0.1466    hit@100 : 0.8311    precision@100 : 0.0252
+
+k:50, shrink:0.5
+Valid result:
+recall@100 : 0.3559    mrr@100 : 0.0961    ndcg@100 : 0.1473    hit@100 : 0.8295    precision@100 : 0.0257
+Test result:
+recall@100 : 0.3689    mrr@100 : 0.1321    ndcg@100 : 0.1603    hit@100 : 0.8361    precision@100 : 0.0265
+
+k:200, shrink:0.0
+Valid result:
+recall@100 : 0.3527    mrr@100 : 0.1019    ndcg@100 : 0.1496    hit@100 : 0.8344    precision@100 : 0.0251
+Test result:
+recall@100 : 0.3624    mrr@100 : 0.0984    ndcg@100 : 0.1496    hit@100 : 0.8328    precision@100 : 0.0257
+
+k:200, shrink:0.5
+Valid result:
+recall@100 : 0.3534    mrr@100 : 0.1045    ndcg@100 : 0.1507    hit@100 : 0.841    precision@100 : 0.0252
+Test result:
+recall@100 : 0.3651    mrr@100 : 0.1014    ndcg@100 : 0.1509    hit@100 : 0.8393    precision@100 : 0.026
+
