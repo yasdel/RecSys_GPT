@@ -1,0 +1,5 @@
+Hyperparam search for RecVAE took 5566.977521181107 seconds.
+Best hyperparameters:
+{'latent_dimension': 200, 'learning_rate': 0.001}.
+Best results:
+ {'model': 'RecVAE', 'best_valid_score': 0.1684, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@100', 0.3386), ('mrr@100', 0.1684), ('ndcg@100', 0.155), ('hit@100', 0.8492), ('precision@100', 0.0305)]), 'test_result': OrderedDict([('recall@100', 0.3389), ('mrr@100', 0.1366), ('ndcg@100', 0.1472), ('hit@100', 0.8459), ('precision@100', 0.03)])}.
