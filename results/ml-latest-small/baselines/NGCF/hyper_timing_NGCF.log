@@ -1,0 +1,5 @@
+Hyperparam search for NGCF took 4108.666660070419 seconds.
+Best hyperparameters:
+{'hidden_size_list': '[128,128,128]', 'learning_rate': 0.001, 'message_dropout': 0.0, 'node_dropout': 0.2, 'reg_weight': 0.001}.
+Best results:
+ {'model': 'NGCF', 'best_valid_score': 0.1328, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@100', 0.337), ('mrr@100', 0.1328), ('ndcg@100', 0.1455), ('hit@100', 0.8508), ('precision@100', 0.0288)]), 'test_result': OrderedDict([('recall@100', 0.3577), ('mrr@100', 0.1198), ('ndcg@100', 0.149), ('hit@100', 0.8574), ('precision@100', 0.0299)])}.
