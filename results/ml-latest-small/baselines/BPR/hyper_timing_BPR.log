@@ -1,0 +1,5 @@
+Hyperparam search for BPR took 690.0869717597961 seconds.
+Best hyperparameters:
+{'embedding_size': 64, 'learning_rate': 0.001}.
+Best results:
+ {'model': 'BPR', 'best_valid_score': 0.1505, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@100', 0.309), ('mrr@100', 0.1505), ('ndcg@100', 0.1459), ('hit@100', 0.8295), ('precision@100', 0.0277)]), 'test_result': OrderedDict([('recall@100', 0.3009), ('mrr@100', 0.1329), ('ndcg@100', 0.1373), ('hit@100', 0.8164), ('precision@100', 0.0279)])}.
