@@ -1,0 +1,5 @@
+Hyperparam search for LightGCN took 1484.3197405338287 seconds.
+Best hyperparameters:
+{'n_layers': 2, 'reg_weight': 0.001}.
+Best results:
+ {'model': 'LightGCN', 'best_valid_score': 0.1564, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@100', 0.3085), ('mrr@100', 0.1564), ('ndcg@100', 0.146), ('hit@100', 0.8393), ('precision@100', 0.0283)]), 'test_result': OrderedDict([('recall@100', 0.3109), ('mrr@100', 0.1384), ('ndcg@100', 0.1416), ('hit@100', 0.8131), ('precision@100', 0.0284)])}.
