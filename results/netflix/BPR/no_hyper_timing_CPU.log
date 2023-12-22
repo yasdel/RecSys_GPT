@@ -1,5 +1,5 @@
-Model training and evaluation (w/o hyperparam search) for BPR took 2.9764208793640137 seconds.
+Model training and evaluation (w/o hyperparam search) for BPR on device CPU took 22.70191979408264 seconds.
 Best valid results:
-OrderedDict([('recall@10', 0.0142), ('mrr@10', 0.0414), ('ndcg@10', 0.0168), ('hit@10', 0.1375), ('precision@10', 0.0151)])
+OrderedDict([('recall@50', 0.2708), ('mrr@50', 0.1923), ('ndcg@50', 0.1552), ('hit@50', 0.9138), ('precision@50', 0.052)])
 Test results:
-OrderedDict([('recall@10', 0.0108), ('mrr@10', 0.0341), ('ndcg@10', 0.0131), ('hit@10', 0.1162), ('precision@10', 0.012), ('best_hyper_idx', 0)]).
+OrderedDict([('recall@50', 0.2663), ('mrr@50', 0.1845), ('ndcg@50', 0.1527), ('hit@50', 0.9288), ('precision@50', 0.0516), ('best_hyper_idx', 0)]).
