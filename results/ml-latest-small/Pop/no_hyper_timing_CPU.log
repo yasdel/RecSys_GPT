@@ -1,0 +1,5 @@
+Model training and evaluation (w/o hyperparam search) for Pop on device CPU took 0.9971969127655029 seconds.
+Best valid results:
+OrderedDict([('recall@50', 0.159), ('mrr@50', 0.094), ('ndcg@50', 0.0784), ('hit@50', 0.6689), ('precision@50', 0.0284)])
+Test results:
+OrderedDict([('recall@50', 0.1541), ('mrr@50', 0.1142), ('ndcg@50', 0.0804), ('hit@50', 0.6459), ('precision@50', 0.0283), ('best_hyper_idx', 0)]).
