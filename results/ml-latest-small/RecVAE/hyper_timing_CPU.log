@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for RecVAE on device CPU took 4654.8322694301605 seconds.
+Best hyperparameters:
+{'latent_dimension': 128, 'learning_rate': 0.005}.
+Best results:
+ {'model': 'RecVAE', 'best_valid_score': 0.1592, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2209), ('mrr@50', 0.1592), ('ndcg@50', 0.119), ('hit@50', 0.7426), ('precision@50', 0.0358)]), 'test_result': OrderedDict([('recall@50', 0.2153), ('mrr@50', 0.1344), ('ndcg@50', 0.1114), ('hit@50', 0.7148), ('precision@50', 0.0357)])}.
