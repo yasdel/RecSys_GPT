@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for ItemKNN on device CPU took 205.87164759635925 seconds.
+Best hyperparameters:
+{'k': 10, 'shrink': 2}.
+Best results:
+ {'model': 'ItemKNN', 'best_valid_score': 0.1445, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2412), ('mrr@50', 0.1445), ('ndcg@50', 0.1217), ('hit@50', 0.7459), ('precision@50', 0.0311)]), 'test_result': OrderedDict([('recall@50', 0.2396), ('mrr@50', 0.1169), ('ndcg@50', 0.114), ('hit@50', 0.7361), ('precision@50', 0.0313)])}.
