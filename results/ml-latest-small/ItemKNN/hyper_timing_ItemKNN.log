@@ -1,5 +1,0 @@
-Hyperparam search for ItemKNN took 275.4462745189667 seconds.
-Best hyperparameters:
-{'k': 10, 'shrink': 1}.
-Best results:
- {'model': 'ItemKNN', 'best_valid_score': 0.1305, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@100', 0.3415), ('mrr@100', 0.1305), ('ndcg@100', 0.1513), ('hit@100', 0.8246), ('precision@100', 0.0247)]), 'test_result': OrderedDict([('recall@100', 0.3597), ('mrr@100', 0.1129), ('ndcg@100', 0.1489), ('hit@100', 0.8344), ('precision@100', 0.0257)])}.
