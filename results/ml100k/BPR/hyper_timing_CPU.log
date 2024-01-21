@@ -1,5 +1,5 @@
-Hyperparam search (and evaluation) for BPR on device CPU took 18.831445932388306 seconds.
+Hyperparam search (and evaluation) for LightGCN on device CPU took 108.21979022026062 seconds.
 Best hyperparameters:
-{'embedding_size': 128}.
+{'learning_rate': 0.002, 'n_layers': 1, 'reg_weight': 0.01}.
 Best results:
- {'model': 'BPR', 'best_valid_score': 0.0381, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@10', 0.0115), ('mrr@10', 0.0381), ('ndcg@10', 0.016), ('hit@10', 0.1353), ('precision@10', 0.0153)]), 'test_result': OrderedDict([('recall@10', 0.0123), ('mrr@10', 0.0543), ('ndcg@10', 0.0203), ('hit@10', 0.1537), ('precision@10', 0.0171)])}.
+ {'model': 'LightGCN', 'best_valid_score': 0.2262, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@10', 0.0891), ('mrr@10', 0.2262), ('ndcg@10', 0.1059), ('hit@10', 0.5644), ('precision@10', 0.0808)]), 'test_result': OrderedDict([('recall@10', 0.0882), ('mrr@10', 0.2087), ('ndcg@10', 0.1009), ('hit@10', 0.539), ('precision@10', 0.079)])}.
