@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for BPR on device CPU took 18.831445932388306 seconds.
+Best hyperparameters:
+{'embedding_size': 128}.
+Best results:
+ {'model': 'BPR', 'best_valid_score': 0.0381, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@10', 0.0115), ('mrr@10', 0.0381), ('ndcg@10', 0.016), ('hit@10', 0.1353), ('precision@10', 0.0153)]), 'test_result': OrderedDict([('recall@10', 0.0123), ('mrr@10', 0.0543), ('ndcg@10', 0.0203), ('hit@10', 0.1537), ('precision@10', 0.0171)])}.
