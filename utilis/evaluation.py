@@ -12,6 +12,8 @@ import unittest
 
 class Eval:
 
+  TOP_K = 50
+  
   def __init__(self, ranked_list, pos_items):
     self.ranked_list = ranked_list
     self.pos_items = pos_items
