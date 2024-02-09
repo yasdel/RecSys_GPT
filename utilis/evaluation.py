@@ -13,6 +13,9 @@ import unittest
 class Eval:
 
   TOP_K = 50
+  MAINSTR_THRES = 3
+  ACTIV_PROPORTIONS = [0.8, 0.2]
+  POP_PROPORTIONS = [0.8, 0.2]
   
   def __init__(self, ranked_list, pos_items):
     self.ranked_list = ranked_list
