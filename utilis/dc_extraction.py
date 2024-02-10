@@ -194,15 +194,32 @@ def popularity_bias(ratings_df, proportion_list, verbose=False):
   return pop_bias, ratings_df_res, items_df, itemIds
 
 
-def user_mainstreaminess(df, mainstr_thres=0, return_groups=False):
+def user_mainstreaminess(ratings_df, mainstr_thres=0, return_flag_col=False):
   '''
+  Inputs
+  ----------
+    - ratings_df: a UIR dataframe in the form (userId, itemId, rating)
+    - mainstr_thres: 
+        A threshold used to determine which users are considered 'mainstream' i.e. have preferred popular items in observed interactions.
+        Specifically, this threshold is used with a 'mainstreaminess_score' (see output below for further details on this score).
+
+  Outputs
+  ----------
+    - df_w_mainstr_info: input dataset enriched with user mainstreaminess info (items are ignored here). Specifically, info is detailed in 3 columns:
+        1. 'historical popularity affinity': list with proportion of user interactions with popular and unpopular items, respectively. 
+                                             Note that ratio between these two elements gives 'mainstreaminess score'
+        2. 'mainstreaminess score': numerical score based on user history, defined as the ratio between proportions of popular and unpopular items she has interacted with. 
+                                    If denominator is 0 (user has not interacted with any non-popular item), this score is set to 1e5
+        3. (if return_flag_col=False) 'is_mainstream': boolean flag indicating whether the user has been classified as mainstream or not.
+    - (if return_flag_col=True) flag_col: a Series with a boolean flag for each user, indicating whether the user has been classified as mainstream or not.
+
   Usage (*dataset needed*)
   ----------
-  user_mainstreaminess(toy_df, mainstr_thres=3, return_groups=True)
+  df, flag_col = user_mainstreaminess(toy_df, mainstr_thres=3, return_flag_col=True) # or use FairnessEval.MAINSTR_THRES as mainstr_thres
 
   '''
 
-  ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(df, [0.8,0.2])
+  ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(ratings_df, [0.8,0.2])
   # group by user and count items with popClass == i (0 is short-head, 2 is distant tail)
   hist_pop_affinity = pd.crosstab(index=ratings_df_res['userId'], columns=ratings_df_res['popClass'], normalize='index')
 
@@ -215,24 +232,37 @@ def user_mainstreaminess(df, mainstr_thres=0, return_groups=False):
   hist_pop_affinity.loc[:,'mainstreaminess score'] = mainstr_scores
   hist_pop_affinity.loc[:,'is_mainstream'] = hist_pop_affinity['mainstreaminess score'] >= mainstr_thres
   hist_pop_affinity.drop(columns=['0','1'], inplace=True)
-  df = df.join(hist_pop_affinity, on='userId', how='left')
-  df = df[['userId','historical popularity affinity','mainstreaminess score','is_mainstream']]
-  df = df.drop_duplicates()
-  df = df.set_index('userId')
+  df_w_mainstr_info = ratings_df.join(hist_pop_affinity, on='userId', how='left')
+  df_w_mainstr_info = df_w_mainstr_info[['userId','historical popularity affinity','mainstreaminess score','is_mainstream']].drop_duplicates()
+  df_w_mainstr_info = df_w_mainstr_info.set_index('userId')
 
-  if return_groups: return df, df['is_mainstream']
-  return df
+  if return_flag_col: return df_w_mainstr_info.drop(columns=['is_mainstream']), df_w_mainstr_info['is_mainstream']
+  return df_w_mainstr_info
 
 
-def user_activity(df, proportion_list, return_groups=False):
+def user_activity(df_ratings, proportion_list, return_flag_col=False):
   '''
+  Inputs
+  ----------
+    - ratings_df: a UIR dataframe in the form (userId, itemId, rating)
+    - proportion_list: a list of proportions i.e., values within [0,1] and summing to 1, 
+                       where each value 'i' indicates the proportion of cumulative interactions of users with i-th class label out of total interactions. 
+                       For example, '[0.8,0.2]' indicates that 80% of interactions will belong to users with class label '0' (i.e., active users). 
+
+  Outputs
+  ----------
+    - df_w_activ_info: input dataset enriched with user activity info (items are ignored here). Specifically, info is detailed in 2 columns:
+        1. 'activity score': numerical score defined as the ratio between observed interactions for a single user and total interactions in df_ratings. 
+        2. (if return_flag_col=False) 'is_active': boolean flag indicating whether the user has been classified as active or not.
+    - (if return_flag_col=True) flag_col: a Series with a boolean flag for each user, indicating whether the user has been classified as active or not.
+
   Usage (*dataset needed*)
   ----------
-  user_activity(toy_df, [0.8, 0.2], return_groups=True)
+  df, flag_col = user_activity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.ACTIV_PROPORTIONS as proportion_list
 
   '''
 
-  activity_df = df[['userId', 'itemId', 'rating']].groupby('userId')  \
+  activity_df = df_ratings[['userId', 'itemId', 'rating']].groupby('userId')  \
                                                   .size()  \
                                                   .reset_index(name='count')  \
                                                   .sort_values(['count'], ascending=False)
@@ -244,26 +274,39 @@ def user_activity(df, proportion_list, return_groups=False):
   # Threshold for activity class
   thres = np.rint(proportion_list[0] * tot_int)
   activity_df.loc[:,'is_active'] = activity_df['CDF'] < thres
-  df = df.merge(activity_df, on='userId')
-  df = df[['userId','is_active','activity score']]
-  df = df.drop_duplicates()
-  df = df.set_index('userId')
+  df_w_activ_info = df_ratings.merge(activity_df, on='userId')
+  df_w_activ_info = df_w_activ_info[['userId','is_active','activity score']].drop_duplicates()
+  df_w_activ_info = df_w_activ_info.set_index('userId')
 
-  if return_groups: return df, df['is_active']
-  return df
+  if return_flag_col: return df_w_activ_info.drop(columns=['is_active']), df_w_activ_info['is_active']
+  return df_w_activ_info
 
 
-def item_popularity(df, proportion_list, return_groups=False):
+def item_popularity(ratings_df, proportion_list, return_flag_col=False):
   '''
-  Tester (*dataset needed*)
-  --------
-  item_popularity(toy_df, [0.8, 0.2], return_groups=True)
+  Inputs
+  ----------
+    - ratings_df: a UIR dataframe in the form (userId, itemId, rating)
+    - proportion_list: a list of proportions i.e., values within [0,1] and summing to 1, 
+                       where each value 'i' indicates the proportion of cumulative interactions of items with class label 'i' out of total interactions. 
+                       For example, '[0.8,0.2]' indicates that 80% of interactions will belong to items with class label '0' (i.e., popular items, aka 'short-head'). 
 
-  Notes
-  --------
+  Outputs
+  ----------
+    - df_w_pop_info: input dataset enriched with item popularity info (users are ignored here). Specifically, info is detailed in 2 columns:
+        1. 'popularity score': numerical score defined as the ratio between observed interactions for a single item and total interactions in df_ratings. 
+        2. (if return_flag_col=False) 'is_popular': boolean flag indicating whether the item has been classified as popular or not.
+    - (if return_flag_col=True) flag_col: a Series with a boolean flag for each item, indicating whether the item has been classified as popular or not.
+
+  Usage (*dataset needed*)
+  ----------
+  df, flag_col = item_popularity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.POP_PROPORTIONS as proportion_list
+
+  Technical notes
+  ----------
   Similar steps as for user activity (because they are both based on number of interactions)
   '''
-  pop_df = df[['userId', 'itemId', 'rating']].groupby('itemId')  \
+  pop_df = ratings_df[['userId', 'itemId', 'rating']].groupby('itemId')  \
                                                   .size()  \
                                                   .reset_index(name='count')  \
                                                   .sort_values(['count'], ascending=False)
@@ -277,31 +320,10 @@ def item_popularity(df, proportion_list, return_groups=False):
   # create new column acting as class label, where True is non-popular and False is popular
   pop_df['is_popular'] = pop_df['CDF'] < thres
   # Add item popularity info to input dataframe
-  df = df.merge(pop_df, on='itemId')
-  df = df[['itemId','is_popular','popularity score']]
-  df = df.drop_duplicates()
-  df.loc[:,'itemId'] = df['itemId'].astype(str)
-  df = df.set_index('itemId')
+  df_w_pop_info = ratings_df.merge(pop_df, on='itemId')
+  df_w_pop_info = df_w_pop_info[['itemId','is_popular','popularity score']].drop_duplicates()
+  df_w_pop_info.loc[:,'itemId'] = df_w_pop_info['itemId'].astype(str)
+  df_w_pop_info = df_w_pop_info.set_index('itemId')
 
-  if return_groups: return df, df['is_popular']
-  return df
-
-
-def coeff_var(col):
-  std = col.std()
-  mean = col.mean()
-  cv = -INF if mean == 0 else std / mean
-  return cv
-
-
-def group_stats(dc_char, flag_col, score_col):
-  df_stats = dc_char.groupby([flag_col], as_index=False) \
-                    .agg({score_col:['mean','std', coeff_var]})
-
-  df_stats.set_index(flag_col, inplace=True)
-  df_stats.columns = [' '.join(col).strip() for col in df_stats.columns.values]
-  stats_cols = df_stats.columns
-
-  df_stats.loc['Overall'] = [dc_char[score_col].mean(), dc_char[score_col].std(), coeff_var(dc_char[score_col])]
-
-  return df_stats
+  if return_flag_col: return df_w_pop_info.drop(columns=['is_popular']), df_w_pop_info['is_popular']
+  return df_w_pop_info
