@@ -180,6 +180,8 @@ class FairnessEval:
     logging.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
     user_hist = self.train_data.groupby('userId').agg(list)
     user_hist.columns = ['hist items', 'hist scores']
+    _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
+    pop_col.index = pop_col.index.astype(int)
     user_hist['hist class'] = user_hist['hist items'].map(lambda hist: [pop_col[item] for item in hist])
     self.eval_df = self.eval_df.merge(user_hist, on='userId')
     # return self
