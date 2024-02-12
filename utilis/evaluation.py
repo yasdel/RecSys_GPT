@@ -70,7 +70,7 @@ class FairnessEval:
       raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
     
     self.test_items_by_user = test_data.groupby('userId').agg(list)
-    self.test_items_by_user.columns = ['userId','itemIds'] + self.test_items_by_user.columns[2:]
+    self.test_items_by_user.columns = ['userId','itemIds'] + list(self.test_items_by_user.columns[2:])
 
 
   def add_accuracy_metrics(self):
