@@ -203,9 +203,10 @@ class FairnessEval:
         rec_items = rec_items[:Eval.TOP_K]
     # if len(rec_items) > len(test_items):
     #   logging.warn(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
-    acc_metrics = {
+    user_metrics = {
+      'userId': user_id,
       'NDCG': Eval.ndcg(rec_items, test_items),
       'Recall': Eval.recall(rec_items, test_items),
       'Precision': Eval.precision(rec_items, test_items),
     } 
-    return pd.Series(acc_metrics)
+    return pd.Series(user_metrics)
