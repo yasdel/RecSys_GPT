@@ -147,59 +147,59 @@ def popularity_segment_flexibleGroup(ratings_df, proportion_list):
   return ratings_df_res, items_df, itemIds
 
 
-# def popularity_bias(ratings_df, proportion_list, verbose=False):
-#   '''
-#   Inputs
-#   ----------
-#     - ratings_df: a UIR dataframe in the form (userId, itemId, rating)
-#     - proportion_list: a list of proportions i.e., values within [0,1] indicating the proportion of interactions belonging to each item class label (e.g. short-head, distant-tail).
+def popularity_bias(ratings_df, proportion_list, verbose=False):
+  '''
+  Inputs
+  ----------
+    - ratings_df: a UIR dataframe in the form (userId, itemId, rating)
+    - proportion_list: a list of proportions i.e., values within [0,1] indicating the proportion of interactions belonging to each item class label (e.g. short-head, distant-tail).
 
-#   Outputs
-#   ----------
-#     - pop_bias: Popularity bias, computed as the ratio between average interactions of popular items (lowest popClass label) and avg interactions of niche items (highest popClass label)
+  Outputs
+  ----------
+    - pop_bias: Popularity bias, computed as the ratio between average interactions of popular items (lowest popClass label) and avg interactions of niche items (highest popClass label)
 
-#     - ratings_df_res: the input dataframe with a new column i.e., a class label
-#       showing if each item belongs to 'short-head'(0), 'mid-tail'(1), 'distant-tail'(2) class.
+    - ratings_df_res: the input dataframe with a new column i.e., a class label
+      showing if each item belongs to 'short-head'(0), 'mid-tail'(1), 'distant-tail'(2) class.
 
-#     - items_df: a dataframe in the form (item, popClass)
+    - items_df: a dataframe in the form (item, popClass)
 
-#     - itemIds: list of ids of short-head, mid-tail, and distant tail items
+    - itemIds: list of ids of short-head, mid-tail, and distant tail items
   
-#   Usage (*dataset needed*)
-#   ----------
-#   popularity_bias(toy_df, [0.8,0.2], verbose=True)
+  Usage (*dataset needed*)
+  ----------
+  popularity_bias(toy_df, [0.8,0.2], verbose=True)
 
-#   '''
+  '''
 
-#   if sum(proportion_list) != 1: 
-#     raise ValueError('Proportions in `proportion_list` parameter should sum to 1!')
-#   ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(ratings_df, proportion_list)
-#   noRatingShort = (ratings_df_res['popClass'] == 0).sum()
-#   noRatingMid = (ratings_df_res['popClass'] == 1).sum()
-#   noRatingDistant = (ratings_df_res['popClass'] == 2).sum()
-#   noShort = (items_df['popClass'] == 0).sum()
-#   noMid = (items_df['popClass'] == 1).sum()
-#   noDistant = (items_df['popClass'] == 2).sum()
-#   r_i_ratio_head = noRatingShort/noShort
-#   r_i_ratio_tail = noRatingDistant/noDistant if noDistant!=0 else noRatingMid/noMid
-#   pop_bias = r_i_ratio_head / r_i_ratio_tail
+  if sum(proportion_list) != 1: 
+    raise ValueError('Proportions in `proportion_list` parameter should sum to 1!')
+  ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(ratings_df, proportion_list)
+  noRatingShort = (ratings_df_res['popClass'] == 0).sum()
+  noRatingMid = (ratings_df_res['popClass'] == 1).sum()
+  noRatingDistant = (ratings_df_res['popClass'] == 2).sum()
+  noShort = (items_df['popClass'] == 0).sum()
+  noMid = (items_df['popClass'] == 1).sum()
+  noDistant = (items_df['popClass'] == 2).sum()
+  r_i_ratio_head = noRatingShort/noShort
+  r_i_ratio_tail = noRatingDistant/noDistant if noDistant!=0 else noRatingMid/noMid
+  pop_bias = r_i_ratio_head / r_i_ratio_tail
 
-#   if verbose:
-#     print(f'''
-#     ----------------------------------
-#     Number of Ratings collected by short-head items: {noRatingShort})
-#     Number of Ratings collected by mid-tail items: {noRatingMid})
-#     Number of Ratings collected by distant-tail items: {noRatingDistant})
-#     Number of short-head items: {noShort})
-#     Number of mid-tail items: {noMid})
-#     Number of distant-tail items: {noDistant})
-#     # R/I (short-head items): {noRatingShort/noShort})
-#     # R/I (mid-tail items): {noRatingMid/noMid})
-#     # R/I (distant-tail items): {noRatingDistant/noDistant})
-#     ----------------------------------
-#     ''')
+  if verbose:
+    print(f'''
+    ----------------------------------
+    Number of Ratings collected by short-head items: {noRatingShort})
+    Number of Ratings collected by mid-tail items: {noRatingMid})
+    Number of Ratings collected by distant-tail items: {noRatingDistant})
+    Number of short-head items: {noShort})
+    Number of mid-tail items: {noMid})
+    Number of distant-tail items: {noDistant})
+    # R/I (short-head items): {noRatingShort/noShort})
+    # R/I (mid-tail items): {noRatingMid/noMid})
+    # R/I (distant-tail items): {noRatingDistant/noDistant})
+    ----------------------------------
+    ''')
 
-#   return pop_bias, ratings_df_res, items_df, itemIds
+  return pop_bias, ratings_df_res, items_df, itemIds
 
 
 def item_popularity(ratings_df, proportion_list, return_flag_col=False):
