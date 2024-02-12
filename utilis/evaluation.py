@@ -51,6 +51,8 @@ class Eval:
     return np.sum(np.divide(np.power(2, scores) - 1, np.log(np.arange(scores.shape[0], dtype=np.float32) + 2)), dtype=np.float32)
 
 import pandas as pd
+import logging
+from dc_extraction import user_activity, user_mainstreaminess, item_popularity
 
 class FairnessEval:
   
@@ -59,43 +61,154 @@ class FairnessEval:
   POP_PROPORTIONS = [0.8, 0.2]
 
 
-  def __init__(self, train_data, user_recommendations):
+  def __init__(self, train_data, test_data, user_recommendations):
     self.train_data = train_data
-    self.user_rec = user_recommendations
+    self.test_data  = test_data
+    self.user_rec   = user_recommendations
+    self.eval_df    = None
+    if not all(user_recommendations.userId.isin(self.test_data.userId)):
+      raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
 
 
-  def aggregate_metrics(eval_df, metrics_cols):
+  # def add_accuracy_metrics(self, user_metrics_df):
+  def add_accuracy_metrics(self):
+    '''
+    Outputs
+    ----------
+      - eval_df: a dataframe with both recommended items and user-level metrics, in the form <userId>, <itemIds>, <metric1>, <metric2>, [...]
+    '''
+    
+    assert 'userId' in self.user_rec, self.user_rec.columns
+    # assert 'userId' in user_metrics_df, user_metrics_df.columns
+    # Ensure test_data has userId as index for efficient lookup
+    assert 'userId' in self.test_data, self.test_data.columns
+    test_data = self.test_data.set_index('userId')
+    # Iterate over each user in self.eval_df
+    user_metrics_df = self.user_rec.apply(user_level_accuracy_metrics, axis=1)
+    assert type(user_metrics_df) == pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
+    self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
+    return self.eval_df
+
+
+  def aggregate_metrics(self, metrics_cols):
     '''
     Inputs
     ----------
-      - eval_df: a dataframe with both recommended items and user-level metrics, in the form <userId>, <itemIds>, <metric1>, <metric2>, [...]
-      - metrics_cols: the list of columns of eval_df containing user-level metrics. For each of these columns, aggregations will be computed.
+      - metrics_cols: list of columns of self.eval_df containing user-level metrics. For each of these columns, aggregations will be computed.
 
     Outputs
     ----------
       - aggregation: Dict with all the computed aggregation functions of each metric i.e. its mean value, and disparity of mean value between two user/item groups.
-                     It can also be returned as a pd.DataFrame with `pd.DataFrame.from_dict(aggregation, orient='index')`,
-                     or as a pd.Series with `pd.Series(aggregation)`
+                     It can be transformed to pandas Series with `pd.Series(aggregation)`
     '''
+
     # Mean value of the metric
     aggregation = {
-        f'Mean {mt}': eval_df[mt].mean()
+        f'Mean {mt}': self.eval_df[mt].mean()
         for mt in metrics_cols
     }
     # C-Fairness: Disparity in accuracy btw user groups (activity & mainstreaminess)
     for mt in metrics_cols:
       aggregation.update({
           f'Disparity in {mt} for user activity':
-          eval_df.groupby('is_active')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze(),
+          self.eval_df.groupby('is_active')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze(),
           f'Disparity in {mt} for user mainstreaminess':
-          eval_df.groupby('is_mainstream')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze()
+          self.eval_df.groupby('is_mainstream')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze()
       })
     # P-Fairness: Disparity in exposure/visibility btw item groups (popularity)
-    class_visibility = pd.Series(eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
-    print(class_visibility) # just to debug
+    class_visibility = pd.Series(self.eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
     aggregation.update({
         f'Disparity in Visibility@{Eval.TOP_K} for item popularity':
         class_visibility.diff().iloc[1:].abs().squeeze(),
         # f'Disparity in Exposure@{Eval.TOP_K} for item popularity': ...
     })
     return aggregation
+
+
+  def add_membership_info(self, save_prefix=None):
+    logging.info('Computing user activity and mainstreaminess labels, mapping each user to one class (e.g. either active or non-active)')
+    _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
+    _, mainstr_col = user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
+    logging.info('Checking consistency of user activity and mainstreaminess mappings with train data')
+    for col in [activ_col, mainstr_col]:
+      assert set(col.index) == set(self.train_data.userId), \
+        f"Users from {col.name} are not the same as users in train set. Here are unknown users of {col.name}, not present in train data\n{set(col.index).difference(set(self.train_data.userId))}"
+    mainstr_col.index = mainstr_col.index.astype(int)
+    activ_col.index = activ_col.index.astype(int)
+    if save_prefix: mainstr_col.to_csv(f'{save_prefix}/user_mainstreaminess.csv')
+    if save_prefix: activ_col.to_csv(f'{save_prefix}/user_activity.csv')
+    logging.info('Adding user membership info: activity and mainstreaminess')
+    self.eval_df = self.eval_df.merge(mainstr_col.to_frame(), on='userId')
+    self.eval_df = self.eval_df.merge(activ_col.to_frame(), on='userId')
+
+    logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
+    _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
+    pop_col.index = pop_col.index.astype(int)
+    if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
+    logging.info('Checking consistency of item popularity mappings with train data')
+    assert set(pop_col.index) == set(self.train_data.itemId), \
+        f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
+    logging.info('Adding item membership info: popularity')
+    self.eval_df[f'top-{TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
+    
+    return self.eval_df
+
+
+  def add_popularity_miscalibration(self):
+    '''
+    Computes JS divergence
+    '''
+    from scipy.spatial import distance
+    self.add_user_history()
+    logging.info('Computing user-level popularity miscalibration (JS divergence)')
+    popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
+    popAffinity_rec = self.eval_df[f'top-{TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
+    self.eval_df['pop affinity hist'] = popAffinity_hist
+    self.eval_df['pop affinity rec'] = popAffinity_rec
+    # Similar to UPD metric (but on single user-level, without group aggregation). UPD is at https://dl.acm.org/doi/pdf/10.1145/3450613.3456821
+    self.eval_df['pop miscalibration (JS div)'] = [distance.jensenshannon(h,r) for h,r in zip(popAffinity_hist,popAffinity_rec)]
+
+    return self.eval_df
+
+
+  def add_user_history(self):
+    logging.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
+    user_hist = self.train_data.groupby('userId').agg(list)
+    user_hist.columns = ['hist items', 'hist scores']
+    user_hist['hist class'] = user_hist['hist items'].map(lambda hist: [pop_col[item] for item in hist])
+    self.eval_df = self.eval_df.merge(user_hist, on='userId')
+    # return self.eval_df
+
+
+  def evaluate_fairness(self, metrics_cols=None):
+    return self                         \
+      .add_accuracy_metrics()           \
+      .add_membership_info()            \
+      .add_popularity_miscalibration()  \
+      .aggregate_metrics(metrics_cols)
+
+
+  @staticmethod
+  def user_level_accuracy_metrics(row:pd.Series):
+    '''
+    Outputs
+    ----------
+      - pd.Series with accuracy metrics (NDCG, Recall, and Precision) for the user in the row. 
+        Note that these metrics will be expanded to columns when used in pd.DataFrame.apply()
+    '''
+    user_id = row['userId']
+    rec_items = row['itemIds']
+    test_items = self.test_data.at[user_id, 'itemIds'].values
+    # # Convert test_items to a NumPy array
+    # test_items = np.array(test_items)
+
+    # If the length of rec_items is greater than k, get the first k items
+    if len(rec_items) > TOP_K:
+        rec_items = rec_items[:TOP_K]
+    
+    acc_metrics = {
+      'NDCG': Eval.ndcg(rec_items, test_items)
+      'Recall': Eval.recall(rec_items, test_items)
+      'Precision': Eval.precision(rec_items, test_items)
+    } 
+    return pd.Series(acc_metrics)
