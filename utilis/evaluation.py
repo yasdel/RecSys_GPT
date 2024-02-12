@@ -85,7 +85,7 @@ class FairnessEval:
     user_metrics_df = self.user_rec.apply(self.user_level_accuracy_metrics, axis=1)
     assert type(user_metrics_df) == pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
     self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
-    return self.eval_df
+    return self
 
 
   def aggregate_metrics(self, metrics_cols):
@@ -149,7 +149,7 @@ class FairnessEval:
     logging.info('Adding item membership info: popularity')
     self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
     
-    return self.eval_df
+    return self
 
 
   def add_popularity_miscalibration(self):
@@ -166,7 +166,7 @@ class FairnessEval:
     # Similar to UPD metric (but on single user-level, without group aggregation). UPD is at https://dl.acm.org/doi/pdf/10.1145/3450613.3456821
     self.eval_df['pop miscalibration (JS div)'] = [distance.jensenshannon(h,r) for h,r in zip(popAffinity_hist,popAffinity_rec)]
 
-    return self.eval_df
+    return self
 
 
   def add_user_history(self):
@@ -175,7 +175,7 @@ class FairnessEval:
     user_hist.columns = ['hist items', 'hist scores']
     user_hist['hist class'] = user_hist['hist items'].map(lambda hist: [pop_col[item] for item in hist])
     self.eval_df = self.eval_df.merge(user_hist, on='userId')
-    # return self.eval_df
+    # return self
 
 
   def evaluate_fairness(self, metrics_cols=None):
