@@ -201,8 +201,8 @@ class FairnessEval:
     # If the length of rec_items is greater than k, get the first k items
     if len(rec_items) > Eval.TOP_K:
         rec_items = rec_items[:Eval.TOP_K]
-    if len(rec_items) != len(test_items):
-      raise ValueError(f'Length mismatch: recommendation list {len(rec_items)} vs positive items {len(test_items)}')
+    # if len(rec_items) > len(test_items):
+    #   logging.warn(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
     acc_metrics = {
       'NDCG': Eval.ndcg(rec_items, test_items),
       'Recall': Eval.recall(rec_items, test_items),
