@@ -84,7 +84,7 @@ class FairnessEval:
     assert 'userId' in self.test_data, self.test_data.columns
     test_data = self.test_data.set_index('userId')
     # Iterate over each user in self.eval_df
-    user_metrics_df = self.user_rec.apply(user_level_accuracy_metrics, axis=1)
+    user_metrics_df = self.user_rec.apply(self.user_level_accuracy_metrics, axis=1)
     assert type(user_metrics_df) == pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
     self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
     return self.eval_df
@@ -188,8 +188,7 @@ class FairnessEval:
       .aggregate_metrics(metrics_cols)
 
 
-  @staticmethod
-  def user_level_accuracy_metrics(row:pd.Series):
+  def user_level_accuracy_metrics(self, row:pd.Series):
     '''
     Outputs
     ----------
