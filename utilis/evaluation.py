@@ -151,7 +151,7 @@ class FairnessEval:
     assert set(pop_col.index) == set(self.train_data.itemId), \
         f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
     logging.info('Adding item membership info: popularity')
-    self.eval_df[f'top-{TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
+    self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
     
     return self.eval_df
 
@@ -164,7 +164,7 @@ class FairnessEval:
     self.add_user_history()
     logging.info('Computing user-level popularity miscalibration (JS divergence)')
     popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
-    popAffinity_rec = self.eval_df[f'top-{TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
+    popAffinity_rec = self.eval_df[f'top-{Eval.TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     self.eval_df['pop affinity hist'] = popAffinity_hist
     self.eval_df['pop affinity rec'] = popAffinity_rec
     # Similar to UPD metric (but on single user-level, without group aggregation). UPD is at https://dl.acm.org/doi/pdf/10.1145/3450613.3456821
@@ -204,8 +204,8 @@ class FairnessEval:
     test_items = np.array(test_items)
 
     # If the length of rec_items is greater than k, get the first k items
-    if len(rec_items) > TOP_K:
-        rec_items = rec_items[:TOP_K]
+    if len(rec_items) > Eval.TOP_K:
+        rec_items = rec_items[:Eval.TOP_K]
     
     acc_metrics = {
       'NDCG': Eval.ndcg(rec_items, test_items),
