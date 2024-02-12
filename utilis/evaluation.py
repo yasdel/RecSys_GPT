@@ -51,8 +51,15 @@ class Eval:
     return np.sum(np.divide(np.power(2, scores) - 1, np.log(np.arange(scores.shape[0], dtype=np.float32) + 2)), dtype=np.float32)
 
 import pandas as pd
-import logging
 from dc_extraction import user_activity, user_mainstreaminess, item_popularity
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='\033[1;36m %(funcName)s - %(asctime)s - %(levelname)s - %(message)s \033[0m', 
+    datefmt='[%X]'
+)
+# logger = logging.getLogger(__name__)
 
 class FairnessEval:
   
