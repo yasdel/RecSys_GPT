@@ -81,11 +81,7 @@ class FairnessEval:
     '''
     
     assert 'userId' in self.user_rec, self.user_rec.columns
-    # assert 'userId' in user_metrics_df, user_metrics_df.columns
-    # Ensure test_data has userId as index for efficient lookup
-    assert 'userId' in self.test_data, self.test_data.columns
-    test_data = self.test_data.set_index('userId')
-    # Iterate over each user in self.eval_df
+    # For each user in self.user_rec, compute all accuracy metrics
     user_metrics_df = self.user_rec.apply(self.user_level_accuracy_metrics, axis=1)
     assert type(user_metrics_df) == pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
     self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
@@ -202,11 +198,11 @@ class FairnessEval:
     test_items = self.test_items_by_user.at[user_id, 'itemIds']
     # Convert test_items to a NumPy array
     test_items = np.array(test_items)
-
     # If the length of rec_items is greater than k, get the first k items
     if len(rec_items) > Eval.TOP_K:
         rec_items = rec_items[:Eval.TOP_K]
-    
+    if len(rec_items) != len(test_items):
+      raise ValueError(f'Length mismatch: recommendation list {len(rec_items)} vs positive items {len(test_items)}')
     acc_metrics = {
       'NDCG': Eval.ndcg(rec_items, test_items),
       'Recall': Eval.recall(rec_items, test_items),
