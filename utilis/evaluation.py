@@ -197,9 +197,10 @@ class FairnessEval:
     '''
     user_id = row['userId']
     rec_items = row['itemIds']
-    test_items = self.test_data.at[user_id, 'itemIds'].values
-    # # Convert test_items to a NumPy array
-    # test_items = np.array(test_items)
+    test_items_by_user = self.test_data.groupby('userId').agg(list)
+    test_items = test_items_by_user.at[user_id, 'itemIds']
+    # Convert test_items to a NumPy array
+    test_items = np.array(test_items)
 
     # If the length of rec_items is greater than k, get the first k items
     if len(rec_items) > TOP_K:
