@@ -51,6 +51,7 @@ class Eval:
     return np.sum(np.divide(np.power(2, scores) - 1, np.log(np.arange(scores.shape[0], dtype=np.float32) + 2)), dtype=np.float32)
 
 import pandas as pd
+import os
 from dc_extraction import user_activity, user_mainstreaminess, item_popularity
 import logging
 
@@ -187,12 +188,15 @@ class FairnessEval:
     # return self
 
 
-  def evaluate_fairness(self, metrics_cols=None):
-    return self                         \
-      .add_accuracy_metrics()           \
-      .add_membership_info()            \
-      .add_popularity_miscalibration()  \
+  def evaluate_fairness(self, metrics_cols=None, save_prefix=None):
+    fairness_metrics = self.add_accuracy_metrics()  \
+      .add_membership_info(save_prefix=save_prefix) \
+      .add_popularity_miscalibration()              \
       .aggregate_metrics(metrics_cols)
+    
+    if save_prefix: pd.Series(fairness_metrics).to_csv(os.path.join(save_prefix, 'fairness_metrics.csv'))
+
+    return fairness_metrics
 
 
   def user_level_accuracy_metrics(self, row:pd.Series):
@@ -207,7 +211,7 @@ class FairnessEval:
     test_items = self.test_items_by_user.at[user_id, 'itemIds']
     # Convert test_items to a NumPy array
     test_items = np.array(test_items)
-    # If the length of rec_items is greater than k, get the first k items
+    # If the length of rec_items is greater than k, truncate to first k items
     if len(rec_items) > Eval.TOP_K:
         rec_items = rec_items[:Eval.TOP_K]
     # if len(rec_items) > len(test_items):
