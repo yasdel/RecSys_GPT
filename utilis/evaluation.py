@@ -68,9 +68,11 @@ class FairnessEval:
     self.eval_df    = None
     if not all(user_recommendations.userId.isin(self.test_data.userId)):
       raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
+    
+    self.test_items_by_user = test_data.groupby('userId').agg(list)
+    self.test_items_by_user.columns = ['userId','itemIds'] + self.test_items_by_user.columns[2:]
 
 
-  # def add_accuracy_metrics(self, user_metrics_df):
   def add_accuracy_metrics(self):
     '''
     Outputs
@@ -197,9 +199,7 @@ class FairnessEval:
     '''
     user_id = row['userId']
     rec_items = row['itemIds']
-    test_items_by_user = self.test_data.groupby('userId').agg(list)
-    test_items_by_user.columns = ['userId','itemIds']
-    test_items = test_items_by_user.at[user_id, 'itemIds']
+    test_items = self.test_items_by_user.at[user_id, 'itemIds']
     # Convert test_items to a NumPy array
     test_items = np.array(test_items)
 
