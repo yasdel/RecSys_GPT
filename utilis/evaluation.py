@@ -207,8 +207,8 @@ class FairnessEval:
         rec_items = rec_items[:TOP_K]
     
     acc_metrics = {
-      'NDCG': Eval.ndcg(rec_items, test_items)
-      'Recall': Eval.recall(rec_items, test_items)
-      'Precision': Eval.precision(rec_items, test_items)
+      'NDCG': Eval.ndcg(rec_items, test_items),
+      'Recall': Eval.recall(rec_items, test_items),
+      'Precision': Eval.precision(rec_items, test_items),
     } 
     return pd.Series(acc_metrics)
