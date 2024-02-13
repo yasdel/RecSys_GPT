@@ -70,6 +70,8 @@ class FairnessEval:
       logging.warn(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
     if not all(user_recommendations.userId.isin(test_data.userId)):
       raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
+    if not all(user_recommendations.userId.isin(test_data.userId)):
+      logging.warn(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
@@ -98,9 +100,10 @@ class FairnessEval:
     '''
     
     assert 'userId' in self.user_rec, self.user_rec.columns
+    logger.info('Computing accuracy metrics for each user in self.user_rec')
     # For each user in self.user_rec, compute all accuracy metrics
     user_metrics_df = self.user_rec.apply(self.user_level_accuracy_metrics, axis=1)
-    assert type(user_metrics_df) == pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
+    assert type(user_metrics_df)==pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
     self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
     return self
 
