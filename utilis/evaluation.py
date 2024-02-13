@@ -66,12 +66,12 @@ class FairnessEval:
   def __init__(self, train_data, test_data, user_recommendations):
     if not all(test_data.userId.isin(train_data.userId)):
       raise ValueError(f'There are unknown users in test_data: {set(test_data.userId).difference(set(train_data.userId))}')
-    if not all(test_data.itemId.isin(train_data.itemId)):
-      logging.warn(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
     if not all(user_recommendations.userId.isin(test_data.userId)):
       raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(self.test_data.userId))}')
+    if not all(test_data.itemId.isin(train_data.itemId)):
+      logging.warn(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
     if not all(i in pd.concat([train_data.itemId,test_data.itemId]).values for i in user_recommendations.itemIds.sum()):
-      logging.warn(f'There are unrecognized items in user_recommendations: {set(self.eval_df.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))}')
+      logging.warn(f'There are unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))}')
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
