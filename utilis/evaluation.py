@@ -96,41 +96,6 @@ class FairnessEval:
     return self
 
 
-  def aggregate_metrics(self, metrics_cols):
-    '''
-    Inputs
-    ----------
-      - metrics_cols: list of columns of self.eval_df containing user-level metrics. For each of these columns, aggregations will be computed.
-
-    Outputs
-    ----------
-      - aggregation: Dict with all the computed aggregation functions of each metric i.e. its mean value, and disparity of mean value between two user/item groups.
-                     It can be transformed to pandas Series with `pd.Series(aggregation)`
-    '''
-
-    # Mean value of the metric
-    aggregation = {
-        f'Mean {mt}': self.eval_df[mt].mean()
-        for mt in metrics_cols
-    }
-    # C-Fairness: Disparity in accuracy btw user groups (activity & mainstreaminess)
-    for mt in metrics_cols:
-      aggregation.update({
-          f'Disparity in {mt} for user activity':
-          self.eval_df.groupby('is_active')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze(),
-          f'Disparity in {mt} for user mainstreaminess':
-          self.eval_df.groupby('is_mainstream')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze()
-      })
-    # P-Fairness: Disparity in exposure/visibility btw item groups (popularity)
-    class_visibility = pd.Series(self.eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
-    aggregation.update({
-        f'Disparity in Visibility@{Eval.TOP_K} for item popularity':
-        class_visibility.diff().iloc[1:].abs().squeeze(),
-        # f'Disparity in Exposure@{Eval.TOP_K} for item popularity': ...
-    })
-    return aggregation
-
-
   def add_membership_info(self, save_prefix=None):
     logging.info('Computing user activity and mainstreaminess labels, mapping each user to one class (e.g. either active or non-active)')
     _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
@@ -188,7 +153,43 @@ class FairnessEval:
     # return self
 
 
+  def aggregate_metrics(self, metrics_cols):
+    '''
+    Inputs
+    ----------
+      - metrics_cols: list of columns of self.eval_df containing user-level metrics. For each of these columns, aggregations will be computed.
+
+    Outputs
+    ----------
+      - aggregation: Dict with all the computed aggregation functions of each metric i.e. its mean value, and disparity of mean value between two user/item groups.
+                     It can be transformed to pandas Series with `pd.Series(aggregation)`
+    '''
+
+    # Mean value of the metric
+    aggregation = {
+        f'Mean {mt}': self.eval_df[mt].mean()
+        for mt in metrics_cols
+    }
+    # C-Fairness: Disparity in accuracy btw user groups (activity & mainstreaminess)
+    for mt in metrics_cols:
+      aggregation.update({
+          f'Disparity in {mt} for user activity':
+          self.eval_df.groupby('is_active')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze(),
+          f'Disparity in {mt} for user mainstreaminess':
+          self.eval_df.groupby('is_mainstream')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze()
+      })
+    # P-Fairness: Disparity in exposure/visibility btw item groups (popularity)
+    class_visibility = pd.Series(self.eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
+    aggregation.update({
+        f'Disparity in Visibility@{Eval.TOP_K} for item popularity':
+        class_visibility.diff().iloc[1:].abs().squeeze(),
+        # f'Disparity in Exposure@{Eval.TOP_K} for item popularity': ...
+    })
+    return aggregation
+
+
   def evaluate_fairness(self, metrics_cols=None, save_prefix=None):
+    os.makedirs(save_prefix, exist_ok=True)
     fairness_metrics = self.add_accuracy_metrics()  \
       .add_membership_info(save_prefix=save_prefix) \
       .add_popularity_miscalibration()              \
@@ -218,8 +219,8 @@ class FairnessEval:
     #   logging.warn(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
     user_metrics = {
       'userId': user_id,
-      'NDCG': Eval.ndcg(rec_items, test_items),
-      'Recall': Eval.recall(rec_items, test_items),
-      'Precision': Eval.precision(rec_items, test_items),
+      f'NDCG@{Eval.TOP_K}': Eval.ndcg(rec_items, test_items),
+      f'Recall@{Eval.TOP_K}': Eval.recall(rec_items, test_items),
+      f'Precision@{Eval.TOP_K}': Eval.precision(rec_items, test_items),
     } 
     return pd.Series(user_metrics)
