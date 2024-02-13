@@ -190,7 +190,7 @@ class FairnessEval:
 
   def evaluate_fairness(self, metrics_cols=None, save_prefix=None):
     if metrics_cols: 
-      metric_cols = [mt if '@' in mt else f'{mt}@{Eval.TOP_K}' for mt in metric_cols]
+      metrics_cols = [mt if '@' in mt else f'{mt}@{Eval.TOP_K}' for mt in metrics_cols]
     os.makedirs(save_prefix, exist_ok=True)
     fairness_metrics = self.add_accuracy_metrics()  \
       .add_membership_info(save_prefix=save_prefix) \
