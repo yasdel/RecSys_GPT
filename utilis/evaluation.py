@@ -50,17 +50,11 @@ class Eval:
   def dcg(scores):
     return np.sum(np.divide(np.power(2, scores) - 1, np.log(np.arange(scores.shape[0], dtype=np.float32) + 2)), dtype=np.float32)
 
+
 import pandas as pd
 import os
 from dc_extraction import user_activity, user_mainstreaminess, item_popularity
 import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='\033[1;36m %(funcName)s - %(asctime)s - %(levelname)s - %(message)s \033[0m', 
-    datefmt='[%X]'
-)
-# logger = logging.getLogger(__name__)
 
 class FairnessEval:
   
@@ -87,6 +81,13 @@ class FairnessEval:
     
     self.test_items_by_user = test_data.groupby('userId').agg(list)
     self.test_items_by_user.columns = ['itemIds'] + list(self.test_items_by_user.columns[1:])
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='\033[1;36m %(funcName)s - %(asctime)s - %(levelname)s - %(message)s \033[0m', 
+        datefmt='[%X]'
+    )
+    logger = logging.getLogger(__name__)
 
 
   def add_accuracy_metrics(self):
@@ -208,14 +209,17 @@ class FairnessEval:
       logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
       _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
       pop_col.index = pop_col.index.astype(int)
-      if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
       logging.info('Checking consistency of item popularity mappings with train data')
       assert set(pop_col.index) == set(self.train_data.itemId), \
           f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
-      logging.info('Handling unknown items of test data: setting them as unpopular (class label "1")')
+      logging.info('Handling unknown items of test data: setting them as unpopular')
       test_unknown_items = set(self.test_data.itemId).difference(set(self.train_data.itemId))
       for i in test_unknown_items: pop_col[i] = False
+      logging.info('Handling possible allucinations (non-existing items in user recommendations): setting them as unpopular')
+      rec_unknown_items = set(self.eval_df.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))
+      for i in rec_unknown_items: pop_col[i] = False
       self.pop_col = pop_col
+      if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
 
     return self.pop_col
 
