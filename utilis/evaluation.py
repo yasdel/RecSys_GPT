@@ -205,7 +205,7 @@ class FairnessEval:
 
 
   def get_item_membership(self, save_prefix=None):
-    if not self.pop_col:
+    if self.pop_col is None: # it will be executed only first time this method is called, like a singleton
       logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
       _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
       pop_col.index = pop_col.index.astype(int)
