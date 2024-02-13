@@ -80,7 +80,11 @@ class FairnessEval:
     self.test_data  = test_data
     self.user_rec   = user_recommendations
     
-    self.eval_df    = None
+    self.activ_col   = None
+    self.mainstr_col = None
+    self.pop_col     = None
+    self.eval_df     = None
+    
     self.test_items_by_user = test_data.groupby('userId').agg(list)
     self.test_items_by_user.columns = ['itemIds'] + list(self.test_items_by_user.columns[1:])
 
@@ -116,13 +120,7 @@ class FairnessEval:
     self.eval_df = self.eval_df.merge(mainstr_col.to_frame(), on='userId')
     self.eval_df = self.eval_df.merge(activ_col.to_frame(), on='userId')
 
-    logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
-    _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
-    pop_col.index = pop_col.index.astype(int)
-    if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
-    logging.info('Checking consistency of item popularity mappings with train data')
-    assert set(pop_col.index) == set(self.train_data.itemId), \
-        f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
+    pop_col = self.get_item_membership(save_prefix=save_prefix)
     logging.info('Adding item membership info: popularity')
     self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
     
@@ -150,8 +148,7 @@ class FairnessEval:
     logging.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
     user_hist = self.train_data.groupby('userId').agg(list)
     user_hist.columns = ['hist items', 'hist scores']
-    _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
-    pop_col.index = pop_col.index.astype(int)
+    pop_col = self.get_item_membership()
     user_hist['hist class'] = user_hist['hist items'].map(lambda hist: [pop_col[item] for item in hist])
     self.eval_df = self.eval_df.merge(user_hist, on='userId')
     # return self
@@ -200,10 +197,27 @@ class FairnessEval:
       .add_membership_info(save_prefix=save_prefix) \
       .add_popularity_miscalibration()              \
       .aggregate_metrics(metrics_cols)
-    
+
     if save_prefix: pd.Series(fairness_metrics).to_csv(os.path.join(save_prefix, 'fairness_metrics.csv'))
 
     return fairness_metrics
+
+
+  def get_item_membership(self, save_prefix=None):
+    if not self.pop_col:
+      logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
+      _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
+      pop_col.index = pop_col.index.astype(int)
+      if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
+      logging.info('Checking consistency of item popularity mappings with train data')
+      assert set(pop_col.index) == set(self.train_data.itemId), \
+          f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
+      logging.info('Handling unknown items of test data: setting them as unpopular (class label "1")')
+      test_unknown_items = set(self.test_data.itemId).difference(set(self.train_data.itemId))
+      for i in test_unknown_items: pop_col[i] = False
+      self.pop_col = pop_col
+
+    return self.pop_col
 
 
   def user_level_accuracy_metrics(self, row:pd.Series):
