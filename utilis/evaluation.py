@@ -53,6 +53,7 @@ class Eval:
 
 import pandas as pd
 import os
+import ast
 from dc_extraction import user_activity, user_mainstreaminess, item_popularity
 import logging
 from setup_logger import logger
@@ -70,9 +71,12 @@ class FairnessEval:
     if not all(user_recommendations.userId.isin(test_data.userId)):
       raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(test_data.userId))}')
     if not all(test_data.itemId.isin(train_data.itemId)):
-      logger.warn(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
+      logger.warning(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
+    if any(type(rec_list)==str for rec_list in user_recommendations.itemIds):
+      logger.warning('User recommendations have been passed as str, converting to list type')
+      user_recommendations.loc[:,'itemIds'] = user_recommendations.itemIds.map(ast.literal_eval)
     if not all(i in pd.concat([train_data.itemId,test_data.itemId]).values for i in user_recommendations.itemIds.sum()):
-      logger.warn(f'There are unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(train_data.itemId)).difference(set(test_data.itemId))}')
+      logger.warning(f'There are unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(train_data.itemId)).difference(set(test_data.itemId))}')
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
@@ -175,9 +179,9 @@ class FairnessEval:
     for mt in metrics_cols:
       aggregation.update({
           f'Disparity in {mt} for user activity':
-          self.eval_df.groupby('is_active')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze(),
+          self.eval_df.groupby('is_active')[mt].agg('mean').diff().iloc[1:].abs().squeeze(),
           f'Disparity in {mt} for user mainstreaminess':
-          self.eval_df.groupby('is_mainstream')[mt].agg(np.mean).diff().iloc[1:].abs().squeeze()
+          self.eval_df.groupby('is_mainstream')[mt].agg('mean').diff().iloc[1:].abs().squeeze()
       })
     # P-Fairness: Disparity in exposure/visibility btw item groups (popularity)
     class_visibility = pd.Series(self.eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
@@ -239,7 +243,7 @@ class FairnessEval:
     if len(rec_items) > Eval.TOP_K:
         rec_items = rec_items[:Eval.TOP_K]
     # if len(rec_items) > len(test_items):
-    #   logging.warn(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
+    #   logging.warning(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
     user_metrics = {
       'userId': user_id,
       f'NDCG@{Eval.TOP_K}': Eval.ndcg(rec_items, test_items),

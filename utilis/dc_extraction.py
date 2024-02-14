@@ -242,7 +242,7 @@ def item_popularity(ratings_df, proportion_list, return_flag_col=False):
   # Add item popularity info to input dataframe
   df_w_pop_info = ratings_df.merge(pop_df, on='itemId')
   df_w_pop_info = df_w_pop_info[['itemId','is_popular','popularity score']].drop_duplicates()
-  df_w_pop_info.loc[:,'itemId'] = df_w_pop_info['itemId'].astype(str)
+  df_w_pop_info.loc[:,'itemId'] = df_w_pop_info['itemId'].map(str)
   df_w_pop_info = df_w_pop_info.set_index('itemId')
 
   if return_flag_col: return df_w_pop_info.drop(columns=['is_popular']), df_w_pop_info['is_popular']

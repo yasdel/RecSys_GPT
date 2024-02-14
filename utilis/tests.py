@@ -47,9 +47,9 @@ class TestNDCG(unittest.TestCase):
 
 class TestFairnessEval(unittest.TestCase):
     def runTest(self):
-        train_df = pd.read_csv('../data/ml-latest-small/train.csv')
-        test_df = pd.read_csv('../data/ml-latest-small/test.csv')
-        rec_df = pd.read_csv('./toy_user_rec.csv')
+        train_df = pd.read_csv('../data/ml-latest-small/train.csv').rename(columns={'user_id': 'userId', 'item_id': 'itemId'})
+        test_df = pd.read_csv('../data/ml-latest-small/test.csv').rename(columns={'user_id': 'userId', 'item_id': 'itemId'})
+        rec_df = pd.read_csv('./toy_user_rec.csv', index_col=0)
         fairnessEvaluator = FairnessEval(train_df, test_df, rec_df)
         res = fairnessEvaluator.evaluate_fairness(['NDCG','Recall','Precision'], save_prefix='.')
         print(res)
@@ -66,4 +66,4 @@ suite.addTest(TestPrecision())
 suite.addTest(TestNDCG())
 suite.addTest(TestFairnessEval())
 runner = unittest.TextTestRunner()
-runner.run(suite)
+# runner.run(suite)

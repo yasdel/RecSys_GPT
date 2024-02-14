@@ -1,0 +1,6 @@
+# unittest cache
+__pycache__
+
+# Fairness Artifacts
+user_*.csv
+item_*.csv
