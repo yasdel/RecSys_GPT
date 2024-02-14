@@ -232,19 +232,19 @@ class FairnessEval:
   def sanitize_input_data(self):
     if not all(self.test_data.userId.isin(self.train_data.userId)):
       raise ValueError(f'There are unknown users in test_data: {set(self.test_data.userId).difference(set(self.train_data.userId))}')
-    if not all(self.user_recommendations.userId.isin(self.test_data.userId)):
-      raise ValueError(f'There are unknown users in user_recommendations: {set(self.user_recommendations.userId).difference(set(self.test_data.userId))}')
+    if not all(self.user_rec.userId.isin(self.test_data.userId)):
+      raise ValueError(f'There are unknown users in user_recommendations: {set(self.user_rec.userId).difference(set(self.test_data.userId))}')
     if not all(self.test_data.itemId.isin(self.train_data.itemId)):
       logger.warning(f'Number of unknown items in test_data: {len(set(self.test_data.itemId).difference(set(self.train_data.itemId)))}')
-    if any(type(rec_list)==str for rec_list in self.user_recommendations.itemIds):
+    if any(type(rec_list)==str for rec_list in self.user_rec.itemIds):
       logger.warning('Converting passed user recommendations from str to list type')
-      self.user_recommendations.loc[:,'itemIds'] = self.user_recommendations.itemIds.map(ast.literal_eval)
-    if any(self.user_recommendations.itemIds.map(len) == 0):
-      logger.warning(f'Removing {(self.user_recommendations.itemIds.map(len)==0).value_counts()} users with empty recommendation list')
-      self.user_recommendations = self.user_recommendations.loc[self.user_recommendations['itemIds'].map(len) > 0]
-    if not all(i in pd.concat([self.train_data.itemId,self.test_data.itemId]).values for i in self.user_recommendations.itemIds.sum()):
-      logger.warning(f'Unrecognized items in user_recommendations: {set(self.user_recommendations.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))}')
-    
+      self.user_rec.loc[:,'itemIds'] = self.user_rec.itemIds.map(ast.literal_eval)
+    if any(self.user_rec.itemIds.map(len) == 0):
+      logger.warning(f'Removing {(self.user_rec.itemIds.map(len)==0).value_counts()} users with empty recommendation list')
+      self.user_rec = self.user_rec.loc[self.user_rec['itemIds'].map(len) > 0]
+    if not all(i in pd.concat([self.train_data.itemId,self.test_data.itemId]).values for i in self.user_rec.itemIds.sum()):
+      logger.warning(f'Unrecognized items in user_recommendations: {set(self.user_rec.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))}')
+
 
   def user_level_accuracy_metrics(self, row:pd.Series):
     '''
