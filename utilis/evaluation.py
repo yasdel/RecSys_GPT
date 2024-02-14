@@ -204,6 +204,8 @@ class FairnessEval:
       self.pop_col = pop_col
       if save_prefix: pop_col.to_csv(os.path.join(save_prefix, 'item_popularity.csv'))
 
+    return self.pop_col
+
 
   def get_user_activity_membership(self, save_prefix=None):
     if self.activ_col is None: # it will be executed only first time this method is called, like a singleton
@@ -216,6 +218,8 @@ class FairnessEval:
       self.activ_col = activ_col
       if save_prefix: activ_col.to_csv(os.path.join(save_prefix, 'user_activity.csv'))
 
+    return self.activ_col
+
 
   def get_user_mainstreaminess_membership(self, save_prefix=None):
     if self.mainstr_col is None: # it will be executed only first time this method is called, like a singleton
@@ -227,6 +231,8 @@ class FairnessEval:
       mainstr_col.index = mainstr_col.index.astype(int)
       self.mainstr_col = mainstr_col
       if save_prefix: mainstr_col.to_csv(os.path.join(save_prefix, 'user_mainstreaminess.csv'))
+
+    return self.mainstr_col
 
 
   def sanitize_input_data(self):
