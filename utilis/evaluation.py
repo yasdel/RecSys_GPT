@@ -66,10 +66,10 @@ class FairnessEval:
 
 
   def __init__(self, train_data, test_data, user_recommendations):
-    train_data, test_data, user_recommendations = FairnessEval.sanitize_input_data(train_data, test_data, user_recommendations)
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
+    self.sanitize_input_data()
     
     self.activ_col   = None
     self.mainstr_col = None
@@ -78,26 +78,6 @@ class FairnessEval:
     
     self.test_items_by_user = test_data.groupby('userId').agg(list)
     self.test_items_by_user.columns = ['itemIds'] + list(self.test_items_by_user.columns[1:])
-
-
-  @staticmethod
-  def sanitize_input_data(train_data, test_data, user_recommendations):
-    if not all(test_data.userId.isin(train_data.userId)):
-      raise ValueError(f'There are unknown users in test_data: {set(test_data.userId).difference(set(train_data.userId))}')
-    if not all(user_recommendations.userId.isin(test_data.userId)):
-      raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(test_data.userId))}')
-    if not all(test_data.itemId.isin(train_data.itemId)):
-      logger.warning(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
-    if any(type(rec_list)==str for rec_list in user_recommendations.itemIds):
-      logger.warning('Converting passed user recommendations from str to list type')
-      user_recommendations.loc[:,'itemIds'] = user_recommendations.itemIds.map(ast.literal_eval)
-    if any(user_recommendations.itemIds.map(len) == 0):
-      logger.warning('Removing users with empty recommendation list converting to list type')
-      user_recommendations = user_recommendations.loc[user_recommendations['itemIds'].map(len) > 0]
-    if not all(i in pd.concat([train_data.itemId,test_data.itemId]).values for i in user_recommendations.itemIds.sum()):
-      logger.warning(f'Unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(train_data.itemId)).difference(set(test_data.itemId))}')
-    
-    return train_data, test_data, user_recommendations
 
 
   def add_accuracy_metrics(self):
@@ -113,30 +93,22 @@ class FairnessEval:
     user_metrics_df = self.user_rec.apply(self.user_level_accuracy_metrics, axis=1)
     assert type(user_metrics_df)==pd.DataFrame, f'user_metrics_df has type {type(user_metrics_df)}'
     self.eval_df = self.user_rec.merge(user_metrics_df, on='userId')
-    return self
+
+    return self # to make it chainable
 
 
   def add_membership_info(self, save_prefix=None):
-    logging.info('Computing user activity and mainstreaminess labels, mapping each user to one class (e.g. either active or non-active)')
-    _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
-    _, mainstr_col = user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
-    logging.info('Checking consistency of user activity and mainstreaminess mappings with train data')
-    for col in [activ_col, mainstr_col]:
-      assert set(col.index) == set(self.train_data.userId), \
-        f"Users from {col.name} are not the same as users in train set. Here are unknown users of {col.name}, not present in train data\n{set(col.index).difference(set(self.train_data.userId))}"
-    mainstr_col.index = mainstr_col.index.astype(int)
-    activ_col.index = activ_col.index.astype(int)
-    if save_prefix: mainstr_col.to_csv(f'{save_prefix}/user_mainstreaminess.csv')
-    if save_prefix: activ_col.to_csv(f'{save_prefix}/user_activity.csv')
+    self.get_user_activity_membership(save_prefix=save_prefix)
+    self.get_user_mainstreaminess_membership(save_prefix=save_prefix)
     logging.info('Adding user membership info: activity and mainstreaminess')
-    self.eval_df = self.eval_df.merge(mainstr_col.to_frame(), on='userId')
-    self.eval_df = self.eval_df.merge(activ_col.to_frame(), on='userId')
+    self.eval_df = self.eval_df.merge(self.activ_col.to_frame(), on='userId')
+    self.eval_df = self.eval_df.merge(self.mainstr_col.to_frame(), on='userId')
 
-    pop_col = self.get_item_membership(save_prefix=save_prefix)
+    self.get_item_popularity_membership(save_prefix=save_prefix)
     logging.info('Adding item membership info: popularity')
-    self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [pop_col[int(i)] for i in lst])
+    self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [self.pop_col[int(i)] for i in lst])
     
-    return self
+    return self # to make it chainable
 
 
   def add_popularity_miscalibration(self):
@@ -153,17 +125,17 @@ class FairnessEval:
     # Similar to UPD metric (but on single user-level, without group aggregation). UPD is at https://dl.acm.org/doi/pdf/10.1145/3450613.3456821
     self.eval_df['pop miscalibration (JS div)'] = [distance.jensenshannon(h,r) for h,r in zip(popAffinity_hist,popAffinity_rec)]
 
-    return self
+    return self # to make it chainable
 
 
   def add_user_history(self):
     logging.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
     user_hist = self.train_data.groupby('userId').agg(list)
     user_hist.columns = ['hist items', 'hist scores']
-    pop_col = self.get_item_membership()
+    pop_col = self.get_item_popularity_membership()
     user_hist['hist class'] = user_hist['hist items'].map(lambda hist: [pop_col[item] for item in hist])
     self.eval_df = self.eval_df.merge(user_hist, on='userId')
-    # return self
+    # return self # to make it chainable
 
 
   def aggregate_metrics(self, metrics_cols):
@@ -215,7 +187,7 @@ class FairnessEval:
     return fairness_metrics
 
 
-  def get_item_membership(self, save_prefix=None):
+  def get_item_popularity_membership(self, save_prefix=None):
     if self.pop_col is None: # it will be executed only first time this method is called, like a singleton
       logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
       _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
@@ -230,10 +202,49 @@ class FairnessEval:
       rec_unknown_items = set(self.eval_df.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))
       for i in rec_unknown_items: pop_col[i] = False
       self.pop_col = pop_col
-      if save_prefix: pop_col.to_csv(f'{save_prefix}/item_popularity.csv')
+      if save_prefix: pop_col.to_csv(os.path.join(save_prefix, 'item_popularity.csv'))
 
-    return self.pop_col
 
+  def get_user_activity_membership(self, save_prefix=None):
+    if self.activ_col is None: # it will be executed only first time this method is called, like a singleton
+      logging.info('Computing user activity labels, indicating whether a user is active or not')
+      _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
+      logging.info('Checking consistency of user activity mapping with train data')
+      assert set(activ_col.index) == set(self.train_data.userId), \
+        f"Users from {activ_col.name} are not the same as users in train set. Here are unknown users of {activ_col.name}, not present in train data\n{set(activ_col.index).difference(set(self.train_data.userId))}"
+      activ_col.index = activ_col.index.astype(int)
+      self.activ_col = activ_col
+      if save_prefix: activ_col.to_csv(os.path.join(save_prefix, 'user_activity.csv'))
+
+
+  def get_user_mainstreaminess_membership(self, save_prefix=None):
+    if self.mainstr_col is None: # it will be executed only first time this method is called, like a singleton
+      logging.info('Computing user mainstreaminess labels, indicating whether a user is mainstream-oriented or not')
+      _, mainstr_col = user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
+      logging.info('Checking consistency of mainstreaminess mapping with train data')
+      assert set(mainstr_col.index) == set(self.train_data.userId), \
+        f"Users from {mainstr_col.name} are not the same as users in train set. Here are unknown users of {mainstr_col.name}, not present in train data\n{set(mainstr_col.index).difference(set(self.train_data.userId))}"
+      mainstr_col.index = mainstr_col.index.astype(int)
+      self.mainstr_col = mainstr_col
+      if save_prefix: mainstr_col.to_csv(os.path.join(save_prefix, 'user_mainstreaminess.csv'))
+
+
+  def sanitize_input_data(self):
+    if not all(self.test_data.userId.isin(self.train_data.userId)):
+      raise ValueError(f'There are unknown users in test_data: {set(self.test_data.userId).difference(set(self.train_data.userId))}')
+    if not all(self.user_recommendations.userId.isin(self.test_data.userId)):
+      raise ValueError(f'There are unknown users in user_recommendations: {set(self.user_recommendations.userId).difference(set(self.test_data.userId))}')
+    if not all(self.test_data.itemId.isin(self.train_data.itemId)):
+      logger.warning(f'Number of unknown items in test_data: {len(set(self.test_data.itemId).difference(set(self.train_data.itemId)))}')
+    if any(type(rec_list)==str for rec_list in self.user_recommendations.itemIds):
+      logger.warning('Converting passed user recommendations from str to list type')
+      self.user_recommendations.loc[:,'itemIds'] = self.user_recommendations.itemIds.map(ast.literal_eval)
+    if any(self.user_recommendations.itemIds.map(len) == 0):
+      logger.warning(f'Removing {(self.user_recommendations.itemIds.map(len)==0).value_counts()} users with empty recommendation list')
+      self.user_recommendations = self.user_recommendations.loc[self.user_recommendations['itemIds'].map(len) > 0]
+    if not all(i in pd.concat([self.train_data.itemId,self.test_data.itemId]).values for i in self.user_recommendations.itemIds.sum()):
+      logger.warning(f'Unrecognized items in user_recommendations: {set(self.user_recommendations.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))}')
+    
 
   def user_level_accuracy_metrics(self, row:pd.Series):
     '''
