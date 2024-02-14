@@ -66,17 +66,7 @@ class FairnessEval:
 
 
   def __init__(self, train_data, test_data, user_recommendations):
-    if not all(test_data.userId.isin(train_data.userId)):
-      raise ValueError(f'There are unknown users in test_data: {set(test_data.userId).difference(set(train_data.userId))}')
-    if not all(user_recommendations.userId.isin(test_data.userId)):
-      raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(test_data.userId))}')
-    if not all(test_data.itemId.isin(train_data.itemId)):
-      logger.warning(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
-    if any(type(rec_list)==str for rec_list in user_recommendations.itemIds):
-      logger.warning('User recommendations have been passed as str, converting to list type')
-      user_recommendations.loc[:,'itemIds'] = user_recommendations.itemIds.map(ast.literal_eval)
-    if not all(i in pd.concat([train_data.itemId,test_data.itemId]).values for i in user_recommendations.itemIds.sum()):
-      logger.warning(f'There are unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(train_data.itemId)).difference(set(test_data.itemId))}')
+    train_data, test_data, user_recommendations = sanitize_input_data(train_data, test_data, user_recommendations)
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
@@ -88,6 +78,25 @@ class FairnessEval:
     
     self.test_items_by_user = test_data.groupby('userId').agg(list)
     self.test_items_by_user.columns = ['itemIds'] + list(self.test_items_by_user.columns[1:])
+
+
+  def sanitize_input_data(train_data, test_data, user_recommendations):
+    if not all(test_data.userId.isin(train_data.userId)):
+      raise ValueError(f'There are unknown users in test_data: {set(test_data.userId).difference(set(train_data.userId))}')
+    if not all(user_recommendations.userId.isin(test_data.userId)):
+      raise ValueError(f'There are unknown users in user_recommendations: {set(user_recommendations.userId).difference(set(test_data.userId))}')
+    if not all(test_data.itemId.isin(train_data.itemId)):
+      logger.warning(f'Number of unknown items in test_data: {len(set(test_data.itemId).difference(set(train_data.itemId)))}')
+    if any(type(rec_list)==str for rec_list in user_recommendations.itemIds):
+      logger.warning('Converting passed user recommendations from str to list type')
+      user_recommendations.loc[:,'itemIds'] = user_recommendations.itemIds.map(ast.literal_eval)
+    if any(user_recommendations.itemIds.map(len) == 0):
+      logger.warning('Removing users with empty recommendation list converting to list type')
+      user_recommendations = user_recommendations.loc[user_recommendations['itemIds'].map(len) > 0]
+    if not all(i in pd.concat([train_data.itemId,test_data.itemId]).values for i in user_recommendations.itemIds.sum()):
+      logger.warning(f'Unrecognized items in user_recommendations: {set(user_recommendations.itemIds.sum()).difference(set(train_data.itemId)).difference(set(test_data.itemId))}')
+    
+    return train_data, test_data, user_recommendations
 
 
   def add_accuracy_metrics(self):
@@ -137,8 +146,6 @@ class FairnessEval:
     self.add_user_history()
     logging.info('Computing user-level popularity miscalibration (JS divergence)')
     popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
-    print(self.eval_df)
-    # print(self.eval_df[f'top-{Eval.TOP_K} class'])
     popAffinity_rec = self.eval_df[f'top-{Eval.TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     self.eval_df['pop affinity hist'] = popAffinity_hist
     self.eval_df['pop affinity rec'] = popAffinity_rec
