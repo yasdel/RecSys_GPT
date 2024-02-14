@@ -66,7 +66,7 @@ class FairnessEval:
 
 
   def __init__(self, train_data, test_data, user_recommendations):
-    train_data, test_data, user_recommendations = sanitize_input_data(train_data, test_data, user_recommendations)
+    train_data, test_data, user_recommendations = FairnessEval.sanitize_input_data(train_data, test_data, user_recommendations)
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
@@ -80,6 +80,7 @@ class FairnessEval:
     self.test_items_by_user.columns = ['itemIds'] + list(self.test_items_by_user.columns[1:])
 
 
+  @staticmethod
   def sanitize_input_data(train_data, test_data, user_recommendations):
     if not all(test_data.userId.isin(train_data.userId)):
       raise ValueError(f'There are unknown users in test_data: {set(test_data.userId).difference(set(train_data.userId))}')
