@@ -1,0 +1,11 @@
+,0
+Mean NDCG@50,0.0788224030434344
+Mean Recall@50,0.15259437244293114
+Mean Precision@50,0.028524046434494195
+Disparity in NDCG@50 for user activity,0.009282618645750279
+Disparity in NDCG@50 for user mainstreaminess,0.050391715265708265
+Disparity in Recall@50 for user activity,0.09733440878431422
+Disparity in Recall@50 for user mainstreaminess,0.11031291980345503
+Disparity in Precision@50 for user activity,0.0321640826873385
+Disparity in Precision@50 for user mainstreaminess,0.0012614745386027686
+Disparity in Visibility@50 for item popularity,"Series([], dtype: float64)"
