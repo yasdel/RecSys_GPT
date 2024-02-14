@@ -54,7 +54,7 @@ class Eval:
 import pandas as pd
 import os
 from dc_extraction import user_activity, user_mainstreaminess, item_popularity
-# import logging
+import logging
 from setup_logger import logger
 
 class FairnessEval:
