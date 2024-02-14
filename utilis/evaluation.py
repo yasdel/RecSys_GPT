@@ -100,12 +100,12 @@ class FairnessEval:
   def add_membership_info(self, save_prefix=None):
     self.get_user_activity_membership(save_prefix=save_prefix)
     self.get_user_mainstreaminess_membership(save_prefix=save_prefix)
-    logging.info('Adding user membership info: activity and mainstreaminess')
+    logger.info('Adding user membership info: activity and mainstreaminess')
     self.eval_df = self.eval_df.merge(self.activ_col.to_frame(), on='userId')
     self.eval_df = self.eval_df.merge(self.mainstr_col.to_frame(), on='userId')
 
     self.get_item_popularity_membership(save_prefix=save_prefix)
-    logging.info('Adding item membership info: popularity')
+    logger.info('Adding item membership info: popularity')
     self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [self.pop_col[int(i)] for i in lst])
     
     return self # to make it chainable
@@ -117,7 +117,7 @@ class FairnessEval:
     '''
     from scipy.spatial import distance
     self.add_user_history()
-    logging.info('Computing user-level popularity miscalibration (JS divergence)')
+    logger.info('Computing user-level popularity miscalibration (JS divergence)')
     popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     popAffinity_rec = self.eval_df[f'top-{Eval.TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     self.eval_df['pop affinity hist'] = popAffinity_hist
@@ -129,7 +129,7 @@ class FairnessEval:
 
 
   def add_user_history(self):
-    logging.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
+    logger.info('Adding user history i.e. set of past interactions with items, together with popularity labels of those items')
     user_hist = self.train_data.groupby('userId').agg(list)
     user_hist.columns = ['hist items', 'hist scores']
     pop_col = self.get_item_popularity_membership()
@@ -189,16 +189,16 @@ class FairnessEval:
 
   def get_item_popularity_membership(self, save_prefix=None):
     if self.pop_col is None: # it will be executed only first time this method is called, like a singleton
-      logging.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
+      logger.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
       _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
       pop_col.index = pop_col.index.astype(int)
-      logging.info('Checking consistency of item popularity mappings with train data')
+      logger.info('Checking consistency of item popularity mappings with train data')
       assert set(pop_col.index) == set(self.train_data.itemId), \
           f"Items from pop_col are not the same as items in train set. Here are unknown items of pop_col, not present in train data\n{set(pop_col.index).difference(set(self.train_data.itemId))}"
-      logging.info('Handling unknown items of test data: setting them as unpopular')
+      logger.info('Handling unknown items of test data: setting them as unpopular')
       test_unknown_items = set(self.test_data.itemId).difference(set(self.train_data.itemId))
       for i in test_unknown_items: pop_col[i] = False
-      logging.info('Handling possible allucinations (non-existing items in user recommendations): setting them as unpopular')
+      logger.info('Handling possible allucinations (non-existing items in user recommendations): setting them as unpopular')
       rec_unknown_items = set(self.eval_df.itemIds.sum()).difference(set(self.train_data.itemId)).difference(set(self.test_data.itemId))
       for i in rec_unknown_items: pop_col[i] = False
       self.pop_col = pop_col
@@ -207,9 +207,9 @@ class FairnessEval:
 
   def get_user_activity_membership(self, save_prefix=None):
     if self.activ_col is None: # it will be executed only first time this method is called, like a singleton
-      logging.info('Computing user activity labels, indicating whether a user is active or not')
+      logger.info('Computing user activity labels, indicating whether a user is active or not')
       _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
-      logging.info('Checking consistency of user activity mapping with train data')
+      logger.info('Checking consistency of user activity mapping with train data')
       assert set(activ_col.index) == set(self.train_data.userId), \
         f"Users from {activ_col.name} are not the same as users in train set. Here are unknown users of {activ_col.name}, not present in train data\n{set(activ_col.index).difference(set(self.train_data.userId))}"
       activ_col.index = activ_col.index.astype(int)
@@ -219,9 +219,9 @@ class FairnessEval:
 
   def get_user_mainstreaminess_membership(self, save_prefix=None):
     if self.mainstr_col is None: # it will be executed only first time this method is called, like a singleton
-      logging.info('Computing user mainstreaminess labels, indicating whether a user is mainstream-oriented or not')
+      logger.info('Computing user mainstreaminess labels, indicating whether a user is mainstream-oriented or not')
       _, mainstr_col = user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
-      logging.info('Checking consistency of mainstreaminess mapping with train data')
+      logger.info('Checking consistency of mainstreaminess mapping with train data')
       assert set(mainstr_col.index) == set(self.train_data.userId), \
         f"Users from {mainstr_col.name} are not the same as users in train set. Here are unknown users of {mainstr_col.name}, not present in train data\n{set(mainstr_col.index).difference(set(self.train_data.userId))}"
       mainstr_col.index = mainstr_col.index.astype(int)
@@ -262,7 +262,7 @@ class FairnessEval:
     if len(rec_items) > Eval.TOP_K:
         rec_items = rec_items[:Eval.TOP_K]
     # if len(rec_items) > len(test_items):
-    #   logging.warning(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
+    #   logger.warning(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
     user_metrics = {
       'userId': user_id,
       f'NDCG@{Eval.TOP_K}': Eval.ndcg(rec_items, test_items),
