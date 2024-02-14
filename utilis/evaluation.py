@@ -133,6 +133,8 @@ class FairnessEval:
     self.add_user_history()
     logging.info('Computing user-level popularity miscalibration (JS divergence)')
     popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
+    print(self.eval_df)
+    # print(self.eval_df[f'top-{Eval.TOP_K} class'])
     popAffinity_rec = self.eval_df[f'top-{Eval.TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     self.eval_df['pop affinity hist'] = popAffinity_hist
     self.eval_df['pop affinity rec'] = popAffinity_rec

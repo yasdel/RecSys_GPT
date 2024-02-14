@@ -45,10 +45,25 @@ class TestNDCG(unittest.TestCase):
                                      (2 ** 4 - 1) / np.log(5)) / idcg))
         self.assertTrue(np.allclose(Eval.ndcg(ranked_list_3, pos_items, pos_relevances), 0.0))
 
+class TestFairnessEval(unittest.TestCase):
+    def runTest(self):
+        train_df = pd.read_csv('../data/ml-latest-small/train.csv')
+        test_df = pd.read_csv('../data/ml-latest-small/test.csv')
+        rec_df = pd.read_csv('./toy_user_rec.csv')
+        fairnessEvaluator = FairnessEval(train_df, test_df, rec_df)
+        res = fairnessEvaluator.evaluate_fairness(['NDCG','Recall','Precision'], save_prefix='.')
+        print(res)
+        print(fairnessEvaluator.eval_df) #TODO: assert it has all added columns
+        self.assertTrue(all(c in fairnessEvaluator.eval_df.columns for c in list(rec_df.columns) + [
+                        'is_mainstream','is_active',f'top-{Eval.TOP_K} class',
+                        'pop affinity hist','pop affinity rec','pop miscalibration (JS div)',
+                        'hist items','hist scores'
+                        ]))
 
 suite = unittest.TestSuite()
 suite.addTest(TestRecall())
 suite.addTest(TestPrecision())
 suite.addTest(TestNDCG())
+suite.addTest(TestFairnessEval())
 runner = unittest.TextTestRunner()
 runner.run(suite)
