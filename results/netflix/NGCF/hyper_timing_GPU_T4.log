@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for NGCF on device GPU_T4 took 596.0476596355438 seconds.
+Best hyperparameters:
+{'hidden_size_list': '[128,128,128]', 'learning_rate': 0.001, 'message_dropout': 0.2, 'node_dropout': 0.0, 'reg_weight': 0.001}.
+Best results:
+ {'model': 'NGCF', 'best_valid_score': 0.0273, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.1996), ('mrr@50', 0.0273), ('ndcg@50', 0.0581), ('hit@50', 0.2833), ('precision@50', 0.0064)]), 'test_result': OrderedDict([('recall@50', 0.7073), ('mrr@50', 0.1565), ('ndcg@50', 0.2667), ('hit@50', 0.8001), ('precision@50', 0.0214)])}.
