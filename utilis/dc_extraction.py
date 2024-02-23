@@ -33,8 +33,8 @@ class DataCharExtractor:
 
     Examples
     ---------
-    gini(np.array([.2,.2,.2,.2,.2,0])) = 0.1666
-    gini(np.array([1,0,0,0,0,0])) = 0.8333
+    DataCharExtractor.gini(np.array([.2,.2,.2,.2,.2,0])) = 0.1666
+    DataCharExtractor.gini(np.array([1,0,0,0,0,0])) = 0.8333
 
     '''
     # All values are treated equally, arrays must be 1d:
@@ -72,8 +72,8 @@ class DataCharExtractor:
     '''
     interactions_per_user = df.userId.value_counts(normalize=True).to_numpy()
     interactions_per_item = df.itemId.value_counts(normalize=True).to_numpy()
-    gini_user = gini(interactions_per_user)
-    gini_item = gini(interactions_per_item)
+    gini_user = DataCharExtractor.gini(interactions_per_user)
+    gini_item = DataCharExtractor.gini(interactions_per_item)
 
     return gini_user, gini_item
 
@@ -106,7 +106,7 @@ class DataCharExtractor:
     
     Usage (*dataset needed*)
     ----------
-    popularity_segment_flexibleGroup(toy_df, [0.8,0.2])
+    DataCharExtractor.popularity_segment_flexibleGroup(toy_df, [0.8,0.2])
 
     '''
     if sum(proportion_list) != 1: 
@@ -169,13 +169,13 @@ class DataCharExtractor:
     
     Usage (*dataset needed*)
     ----------
-    popularity_bias(toy_df, [0.8,0.2], verbose=True)
+    DataCharExtractor.popularity_bias(toy_df, [0.8,0.2], verbose=True)
 
     '''
 
     if sum(proportion_list) != 1: 
       raise ValueError('Proportions in `proportion_list` parameter should sum to 1!')
-    ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(ratings_df, proportion_list)
+    ratings_df_res, items_df, itemIds = DataCharExtractor.popularity_segment_flexibleGroup(ratings_df, proportion_list)
     noRatingShort = (ratings_df_res['popClass'] == 0).sum()
     noRatingMid = (ratings_df_res['popClass'] == 1).sum()
     noRatingDistant = (ratings_df_res['popClass'] == 2).sum()
@@ -222,7 +222,7 @@ class DataCharExtractor:
 
     Usage (*dataset needed*)
     ----------
-    df, flag_col = item_popularity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.POP_PROPORTIONS as proportion_list
+    df, flag_col = DataCharExtractor.item_popularity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.POP_PROPORTIONS as proportion_list
 
     Technical notes
     ----------
@@ -272,11 +272,11 @@ class DataCharExtractor:
 
     Usage (*dataset needed*)
     ----------
-    df, flag_col = user_mainstreaminess(toy_df, mainstr_thres=3, return_flag_col=True) # or use FairnessEval.MAINSTR_THRES as mainstr_thres
+    df, flag_col = DataCharExtractor.user_mainstreaminess(toy_df, mainstr_thres=3, return_flag_col=True) # or use FairnessEval.MAINSTR_THRES as mainstr_thres
 
     '''
 
-    ratings_df_res, items_df, itemIds = popularity_segment_flexibleGroup(ratings_df, [0.8,0.2])
+    ratings_df_res, items_df, itemIds = DataCharExtractor.popularity_segment_flexibleGroup(ratings_df, [0.8,0.2])
     # group by user and count items with popClass == i (0 is short-head, 2 is distant tail)
     hist_pop_affinity = pd.crosstab(index=ratings_df_res['userId'], columns=ratings_df_res['popClass'], normalize='index')
 
@@ -315,7 +315,7 @@ class DataCharExtractor:
 
     Usage (*dataset needed*)
     ----------
-    df, flag_col = user_activity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.ACTIV_PROPORTIONS as proportion_list
+    df, flag_col = DataCharExtractor.user_activity(toy_df, proportion_list=[0.8,0.2], return_flag_col=True) # or use FairnessEval.ACTIV_PROPORTIONS as proportion_list
 
     '''
 
@@ -340,7 +340,7 @@ class DataCharExtractor:
 
   @staticmethod
   def extract_fairnessDC(df):
-    stats = group_fairness(df)
+    stats = DataCharExtractor.group_fairness(df)
     kw_mapper = {
         'mainstr': {'long_kw': 'user_mainstr', 'grp': 'ug'},
         'activ':   {'long_kw': 'user_activ',   'grp': 'ug'},
@@ -353,15 +353,15 @@ class DataCharExtractor:
       # Transform boolean df index (False, True) in strings
       stats_df.index = stats_df.index.map(str)
       fairDC_dct.update({
-          f'std_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='std'),
-          f'avg_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='mean'),
-          f'cv_{k}_{grp}1':  get_from_stats(stats_df, row='False', col_suffix='coeff_var'),
-          f'std_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='std'),
-          f'avg_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='mean'),
-          f'cv_{k}_{grp}2':  get_from_stats(stats_df, row='True',  col_suffix='coeff_var'),
-          f'std_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='std'),
-          f'avg_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='mean'),
-          f'cv_overall_{long_kw}':  get_from_stats(stats_df, row='Overall', col_suffix='coeff_var')
+          f'std_{k}_{grp}1': DataCharExtractor.get_from_stats(stats_df, row='False', col_suffix='std'),
+          f'avg_{k}_{grp}1': DataCharExtractor.get_from_stats(stats_df, row='False', col_suffix='mean'),
+          f'cv_{k}_{grp}1':  DataCharExtractor.get_from_stats(stats_df, row='False', col_suffix='coeff_var'),
+          f'std_{k}_{grp}2': DataCharExtractor.get_from_stats(stats_df, row='True',  col_suffix='std'),
+          f'avg_{k}_{grp}2': DataCharExtractor.get_from_stats(stats_df, row='True',  col_suffix='mean'),
+          f'cv_{k}_{grp}2':  DataCharExtractor.get_from_stats(stats_df, row='True',  col_suffix='coeff_var'),
+          f'std_overall_{long_kw}': DataCharExtractor.get_from_stats(stats_df, row='Overall', col_suffix='std'),
+          f'avg_overall_{long_kw}': DataCharExtractor.get_from_stats(stats_df, row='Overall', col_suffix='mean'),
+          f'cv_overall_{long_kw}':  DataCharExtractor.get_from_stats(stats_df, row='Overall', col_suffix='coeff_var')
       })
 
     # Derived DCs
@@ -386,25 +386,32 @@ class DataCharExtractor:
     '''
 
     stats = dict()
-    stats['mainstr'] = group_stats(dc_char=user_mainstreaminess(self.train_data, MAINSTR_THRES),
-                                    flag_col='is_mainstream', score_col='mainstreaminess score')
-    stats['activ'] = group_stats(dc_char=user_activity(self.train_data, ACTIV_PROPORTIONS),
-                                  flag_col='is_active', score_col='activity score')
-    stats['pop'] = group_stats(dc_char=item_popularity(self.train_data, POP_PROPORTIONS),
-                                flag_col='is_popular', score_col='popularity score')
+    stats['mainstr'] = DataCharExtractor.group_stats(
+                      dc_char=DataCharExtractor.user_mainstreaminess(self.train_data, MAINSTR_THRES),
+                      flag_col='is_mainstream', score_col='mainstreaminess score')
+    stats['activ'] = DataCharExtractor.group_stats(
+                      dc_char=DataCharExtractor.user_activity(self.train_data, ACTIV_PROPORTIONS),
+                      flag_col='is_active', score_col='activity score')
+    stats['pop'] = DataCharExtractor.group_stats(
+                      dc_char=DataCharExtractor.item_popularity(self.train_data, POP_PROPORTIONS),
+                      flag_col='is_popular', score_col='popularity score')
 
     return stats
 
   @staticmethod
   def group_stats(dc_char, flag_col, score_col):
     df_stats = dc_char.groupby([flag_col], as_index=False) \
-                      .agg({score_col:['mean', 'std', coeff_var]})
+                      .agg({score_col:['mean', 'std', DataCharExtractor.coeff_var]})
 
     df_stats.set_index(flag_col, inplace=True)
     df_stats.columns = [' '.join(col).strip() for col in df_stats.columns.values]
     stats_cols = df_stats.columns
 
-    df_stats.loc['Overall'] = [dc_char[score_col].mean(), dc_char[score_col].std(), coeff_var(dc_char[score_col])]
+    df_stats.loc['Overall'] = [
+      dc_char[score_col].mean(), 
+      dc_char[score_col].std(), 
+      DataCharExtractor.coeff_var(dc_char[score_col])
+    ]
 
     return df_stats
 
@@ -471,8 +478,7 @@ class DataCharExtractor:
         })
 
       if gini:
-        # Assume 'gini_user_item' is a predefined function that returns Gini coefficients for users and items
-        gini_user, gini_item = gini_user_item(UIMat_df)
+        gini_user, gini_item = DataCharExtractor.gini_user_item(UIMat_df)
         stats.update({
           'gini_user': gini_user,
           'gini_item': gini_item
