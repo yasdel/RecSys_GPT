@@ -337,79 +337,160 @@ def user_activity(df_ratings, proportion_list, return_flag_col=False):
   return df_w_activ_info
 
 
-  def extract_fairnessDC(df):
-    stats = group_fairness(df)
-    kw_mapper = {
-        'mainstr': {'long_kw': 'user_mainstr', 'grp': 'ug'},
-        'activ':   {'long_kw': 'user_activ',   'grp': 'ug'},
-        'pop':     {'long_kw': 'item_pop',     'grp': 'ig'}
-    }
-    fairDC_dct = dict()
-    for k, v in kw_mapper.items():
-      stats_df = stats[k]
-      long_kw, grp = v['long_kw'], v['grp']
-      # Transform boolean df index (False, True) in strings
-      stats_df.index = stats_df.index.map(str)
-      fairDC_dct.update({
-          f'std_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='std'),
-          f'avg_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='mean'),
-          f'cv_{k}_{grp}1':  get_from_stats(stats_df, row='False', col_suffix='coeff_var'),
-          f'std_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='std'),
-          f'avg_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='mean'),
-          f'cv_{k}_{grp}2':  get_from_stats(stats_df, row='True',  col_suffix='coeff_var'),
-          f'std_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='std'),
-          f'avg_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='mean'),
-          f'cv_overall_{long_kw}':  get_from_stats(stats_df, row='Overall', col_suffix='coeff_var')
-      })
-
-    # Derived DCs
+def extract_fairnessDC(df):
+  stats = group_fairness(df)
+  kw_mapper = {
+      'mainstr': {'long_kw': 'user_mainstr', 'grp': 'ug'},
+      'activ':   {'long_kw': 'user_activ',   'grp': 'ug'},
+      'pop':     {'long_kw': 'item_pop',     'grp': 'ig'}
+  }
+  fairDC_dct = dict()
+  for k, v in kw_mapper.items():
+    stats_df = stats[k]
+    long_kw, grp = v['long_kw'], v['grp']
+    # Transform boolean df index (False, True) in strings
+    stats_df.index = stats_df.index.map(str)
     fairDC_dct.update({
-        'cv_mainstr disparity (abs)': abs(fairDC_dct['cv_mainstr_ug1'] - fairDC_dct['cv_mainstr_ug2']),
-        'cv_activ disparity (abs)': abs(fairDC_dct['cv_activ_ug1'] - fairDC_dct['cv_activ_ug2']),
-        'cv_pop disparity (abs)': abs(fairDC_dct['cv_pop_ig1'] - fairDC_dct['cv_pop_ig2']),
+        f'std_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='std'),
+        f'avg_{k}_{grp}1': get_from_stats(stats_df, row='False', col_suffix='mean'),
+        f'cv_{k}_{grp}1':  get_from_stats(stats_df, row='False', col_suffix='coeff_var'),
+        f'std_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='std'),
+        f'avg_{k}_{grp}2': get_from_stats(stats_df, row='True',  col_suffix='mean'),
+        f'cv_{k}_{grp}2':  get_from_stats(stats_df, row='True',  col_suffix='coeff_var'),
+        f'std_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='std'),
+        f'avg_overall_{long_kw}': get_from_stats(stats_df, row='Overall', col_suffix='mean'),
+        f'cv_overall_{long_kw}':  get_from_stats(stats_df, row='Overall', col_suffix='coeff_var')
     })
 
-    return fairDC_dct
+  # Derived DCs
+  fairDC_dct.update({
+      'cv_mainstr disparity (abs)': abs(fairDC_dct['cv_mainstr_ug1'] - fairDC_dct['cv_mainstr_ug2']),
+      'cv_activ disparity (abs)': abs(fairDC_dct['cv_activ_ug1'] - fairDC_dct['cv_activ_ug2']),
+      'cv_pop disparity (abs)': abs(fairDC_dct['cv_pop_ig1'] - fairDC_dct['cv_pop_ig2']),
+  })
+
+  return fairDC_dct
 
 
-  def group_fairness(self):
-    '''
-    This function computes both group-level and overall statistics (standard deviation, mean, coefficient of variation
-    i.e. ratio of standard deviation to the mean) for fairness-oriented Data Characteristics
-    i.e., user mainstreamness, user activity, and item popularity.
+def group_fairness(self):
+  '''
+  This function computes both group-level and overall statistics (standard deviation, mean, coefficient of variation
+  i.e. ratio of standard deviation to the mean) for fairness-oriented Data Characteristics
+  i.e., user mainstreamness, user activity, and item popularity.
 
-    Example output
-    ------
-    #TODO
-    '''
+  Example output
+  ------
+  #TODO
+  '''
 
-    stats = dict()
-    stats['mainstr'] = group_stats(dc_char=user_mainstreaminess(self.train_data, MAINSTR_THRES),
-                                   flag_col='is_mainstream', score_col='mainstreaminess score')
-    stats['activ'] = group_stats(dc_char=user_activity(self.train_data, ACTIV_PROPORTIONS),
-                                 flag_col='is_active', score_col='activity score')
-    stats['pop'] = group_stats(dc_char=item_popularity(self.train_data, POP_PROPORTIONS),
-                               flag_col='is_popular', score_col='popularity score')
+  stats = dict()
+  stats['mainstr'] = group_stats(dc_char=user_mainstreaminess(self.train_data, MAINSTR_THRES),
+                                  flag_col='is_mainstream', score_col='mainstreaminess score')
+  stats['activ'] = group_stats(dc_char=user_activity(self.train_data, ACTIV_PROPORTIONS),
+                                flag_col='is_active', score_col='activity score')
+  stats['pop'] = group_stats(dc_char=item_popularity(self.train_data, POP_PROPORTIONS),
+                              flag_col='is_popular', score_col='popularity score')
+
+  return stats
+
+
+def group_stats(dc_char, flag_col, score_col):
+  df_stats = dc_char.groupby([flag_col], as_index=False) \
+                    .agg({score_col:['mean', 'std', coeff_var]})
+
+  df_stats.set_index(flag_col, inplace=True)
+  df_stats.columns = [' '.join(col).strip() for col in df_stats.columns.values]
+  stats_cols = df_stats.columns
+
+  df_stats.loc['Overall'] = [dc_char[score_col].mean(), dc_char[score_col].std(), coeff_var(dc_char[score_col])]
+
+  return df_stats
+
+
+def get_from_stats(stats, row, col_suffix):
+  x = stats.loc[row, filter(lambda x: x.endswith(col_suffix), stats.columns)]
+  try:
+    return float(x)
+  except Exception: 
+    raise ValueError(f'Unexpected results from stats.loc: {x}')
+
+
+def calculate_user_item_statistics(UIMat_df, base_data_char=True, gini=True, fairness_data_char=False, verbose=True):
+    """
+    Calculates various statistics from a user-item interaction matrix DataFrame.
+
+    Parameters:
+    UIMat_df (DataFrame): A pandas DataFrame with columns 'userId', 'itemId', and 'rating'.
+    verbose: if True, prints the computed statistics
+
+    Returns:
+    dict: A dictionary containing:
+          - number of users
+          - number of items
+          - average number of ratings per user
+          - average number of ratings per item
+          - sparsity of the dataset (and log10)
+          - shape of the dataset (and log10)
+          - Gini coefficients for rating distributions over users and items
+    """
+
+    # Calculate the number of users and items
+    num_users = UIMat_df['userId'].nunique()
+    num_items = UIMat_df['itemId'].nunique()
+
+    num_ratings = len(UIMat_df)
+
+    # Calculate the average number of ratings per user
+    ratings_per_user = UIMat_df.groupby('userId')['rating'].count().mean()
+
+    # Calculate the average number of ratings per item
+    ratings_per_item = UIMat_df.groupby('itemId')['rating'].count().mean()
+
+    # Create a dictionary of the calculated statistics
+    stats = {
+        'num_ratings': num_ratings,
+        'num_users': num_users,
+        'num_items': num_items,
+        'avg_ratings_per_user': ratings_per_user,
+        'avg_ratings_per_item': ratings_per_item,
+    }
+
+    if base_data_char:
+      # Calculate the sparsity of the dataset
+      sparsity = 100 * (1 - len(UIMat_df) / (num_users * num_items))
+      log_density = log_density(num_users, num_items, num_ratings)
+      shape = num_users / num_items
+      log_shape = log_shape(num_users, num_items)
+      stats.update({
+        'sparsity': sparsity,
+        'log_density': log_density,
+        'shape': shape,
+        'log_shape': log_shape
+      })
+
+    if gini:
+      # Assume 'gini_user_item' is a predefined function that returns Gini coefficients for users and items
+      gini_user, gini_item = gini_user_item(UIMat_df)
+      stats.update({
+        'gini_user': gini_user,
+        'gini_item': gini_item
+      })
+
+    # if fairness_data_char:
+
+    if verbose:
+      print('....................................')
+      print(f"Number of ratings: {stats['num_ratings']}")
+      print(f"Number of users: {stats['num_users']}")
+      print(f"Number of items: {stats['num_items']}")
+      print(f"Average number of ratings per user: {stats['avg_ratings_per_user']}")
+      print(f"Average number of ratings per item: {stats['avg_ratings_per_item']}")
+      print(f"Sparsity: {stats.get('sparsity', '-'):.4f} %")
+      print(f"Log10 Density: {stats.get('log_density', '-'):.4f} %")
+      print(f"Shape: {stats.get('shape', '-'):.4f} %")
+      print(f"Log10 Shape: {stats.get('log_shape', '-'):.4f} %")
+      print(f"Gini user: {stats.get('gini_user', '-')}")
+      print(f"Gini item: {stats.get('gini_item', '-')}")
+      print('....................................')
 
     return stats
-
-
-  def group_stats(dc_char, flag_col, score_col):
-    df_stats = dc_char.groupby([flag_col], as_index=False) \
-                      .agg({score_col:['mean', 'std', coeff_var]})
-
-    df_stats.set_index(flag_col, inplace=True)
-    df_stats.columns = [' '.join(col).strip() for col in df_stats.columns.values]
-    stats_cols = df_stats.columns
-
-    df_stats.loc['Overall'] = [dc_char[score_col].mean(), dc_char[score_col].std(), coeff_var(dc_char[score_col])]
-
-    return df_stats
-
-
-  def get_from_stats(stats, row, col_suffix):
-    x = stats.loc[row, filter(lambda x: x.endswith(col_suffix), stats.columns)]
-    try:
-      return float(x)
-    except Exception: 
-      raise ValueError(f'Unexpected results from stats.loc: {x}')
