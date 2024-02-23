@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for ItemKNN on device GPU_T4 took 2481.405266046524 seconds.
+Best hyperparameters:
+{'k': 50, 'shrink': 2}.
+Best results:
+ {'model': 'ItemKNN', 'best_valid_score': 0.3086, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2641), ('mrr@50', 0.3086), ('ndcg@50', 0.1867), ('hit@50', 0.9388), ('precision@50', 0.0795)]), 'test_result': OrderedDict([('recall@50', 0.501), ('mrr@50', 0.5133), ('ndcg@50', 0.3758), ('hit@50', 0.9982), ('precision@50', 0.1266)])}.
