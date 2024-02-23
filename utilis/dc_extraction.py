@@ -458,14 +458,14 @@ def calculate_user_item_statistics(UIMat_df, base_data_char=True, gini=True, fai
     if base_data_char:
       # Calculate the sparsity of the dataset
       sparsity = 100 * (1 - len(UIMat_df) / (num_users * num_items))
-      log_density = log_density(num_users, num_items, num_ratings)
+      log10_density = log_density(num_users, num_items, num_ratings)
       shape = num_users / num_items
-      log_shape = log_shape(num_users, num_items)
+      log10_shape = log_shape(num_users, num_items)
       stats.update({
         'sparsity': sparsity,
-        'log_density': log_density,
+        'log_density': log10_density,
         'shape': shape,
-        'log_shape': log_shape
+        'log_shape': log10_shape
       })
 
     if gini:
