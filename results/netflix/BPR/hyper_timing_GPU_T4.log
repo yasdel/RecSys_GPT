@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for BPR on device GPU_T4 took 2020.8377692699432 seconds.
+Best hyperparameters:
+{'embedding_size': 32, 'learning_rate': 0.0005}.
+Best results:
+ {'model': 'BPR', 'best_valid_score': 0.2364, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2889), ('mrr@50', 0.2364), ('ndcg@50', 0.234), ('hit@50', 0.3511), ('precision@50', 0.0281)]), 'test_result': OrderedDict([('recall@50', 0.2913), ('mrr@50', 0.2365), ('ndcg@50', 0.2352), ('hit@50', 0.3511), ('precision@50', 0.0284)])}.
