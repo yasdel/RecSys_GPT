@@ -9,6 +9,7 @@ Original file is located at
 import numpy as np
 import pandas as pd
 
+INF = 1e6
 
 def coeff_var(col):
   std = col.std()
