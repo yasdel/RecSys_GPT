@@ -54,7 +54,8 @@ class Eval:
 import pandas as pd
 import os
 import ast
-from dc_extraction import user_activity, user_mainstreaminess, item_popularity
+from dc_extraction import DataCharExtractor
+# from dc_extraction import user_activity, user_mainstreaminess, item_popularity
 import logging
 from setup_logger import logger
 
@@ -190,7 +191,7 @@ class FairnessEval:
   def get_item_popularity_membership(self, save_prefix=None):
     if self.pop_col is None: # it will be executed only first time this method is called, like a singleton
       logger.info('Computing item popularity labels, mapping each item to one class (either popular or unpopular)')
-      _, pop_col = item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
+      _, pop_col = DataCharExtractor.item_popularity(self.train_data, proportion_list=FairnessEval.POP_PROPORTIONS, return_flag_col=True)
       pop_col.index = pop_col.index.astype(int)
       logger.info('Checking consistency of item popularity mappings with train data')
       assert set(pop_col.index) == set(self.train_data.itemId), \
@@ -210,7 +211,7 @@ class FairnessEval:
   def get_user_activity_membership(self, save_prefix=None):
     if self.activ_col is None: # it will be executed only first time this method is called, like a singleton
       logger.info('Computing user activity labels, indicating whether a user is active or not')
-      _, activ_col = user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
+      _, activ_col = DataCharExtractor.user_activity(self.train_data, proportion_list=FairnessEval.ACTIV_PROPORTIONS, return_flag_col=True)
       logger.info('Checking consistency of user activity mapping with train data')
       assert set(activ_col.index) == set(self.train_data.userId), \
         f"Users from {activ_col.name} are not the same as users in train set. Here are unknown users of {activ_col.name}, not present in train data\n{set(activ_col.index).difference(set(self.train_data.userId))}"
@@ -224,7 +225,7 @@ class FairnessEval:
   def get_user_mainstreaminess_membership(self, save_prefix=None):
     if self.mainstr_col is None: # it will be executed only first time this method is called, like a singleton
       logger.info('Computing user mainstreaminess labels, indicating whether a user is mainstream-oriented or not')
-      _, mainstr_col = user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
+      _, mainstr_col = DataCharExtractor.user_mainstreaminess(self.train_data, mainstr_thres=FairnessEval.MAINSTR_THRES, return_flag_col=True)
       logger.info('Checking consistency of mainstreaminess mapping with train data')
       assert set(mainstr_col.index) == set(self.train_data.userId), \
         f"Users from {mainstr_col.name} are not the same as users in train set. Here are unknown users of {mainstr_col.name}, not present in train data\n{set(mainstr_col.index).difference(set(self.train_data.userId))}"
