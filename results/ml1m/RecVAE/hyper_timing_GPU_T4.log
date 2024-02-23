@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for RecVAE on device GPU_T4 took 17499.128765821457 seconds.
+Best hyperparameters:
+{'latent_dimension': 128, 'learning_rate': 0.005}.
+Best results:
+ {'model': 'RecVAE', 'best_valid_score': 0.2503, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2591), ('mrr@50', 0.2503), ('ndcg@50', 0.1716), ('hit@50', 0.9293), ('precision@50', 0.0776)]), 'test_result': OrderedDict([('recall@50', 0.5), ('mrr@50', 0.4616), ('ndcg@50', 0.3635), ('hit@50', 0.9975), ('precision@50', 0.1253)])}.
