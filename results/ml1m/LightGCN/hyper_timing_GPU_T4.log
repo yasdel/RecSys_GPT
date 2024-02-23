@@ -1,0 +1,5 @@
+Hyperparam search (and evaluation) for LightGCN on device GPU_T4 took 22656.50553035736 seconds.
+Best hyperparameters:
+{'learning_rate': 0.0005, 'n_layers': 1, 'reg_weight': 0.0001}.
+Best results:
+ {'model': 'LightGCN', 'best_valid_score': 0.2547, 'valid_score_bigger': True, 'best_valid_result': OrderedDict([('recall@50', 0.2561), ('mrr@50', 0.2547), ('ndcg@50', 0.1712), ('hit@50', 0.9312), ('precision@50', 0.0771)]), 'test_result': OrderedDict([('recall@50', 0.5038), ('mrr@50', 0.4617), ('ndcg@50', 0.3648), ('hit@50', 0.998), ('precision@50', 0.1265)])}.
