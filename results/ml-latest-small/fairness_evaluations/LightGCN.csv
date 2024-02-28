@@ -1,11 +1,11 @@
 ,0
-Mean NDCG@50,0.10851436219321776
-Mean Recall@50,0.2138738573912939
-Mean Precision@50,0.034958540630182416
-Disparity in NDCG@50 for user activity,0.03679086549836673
-Disparity in NDCG@50 for user mainstreaminess,0.06687642545736724
-Disparity in Recall@50 for user activity,0.15928706483577165
-Disparity in Recall@50 for user mainstreaminess,0.14982554735616926
-Disparity in Precision@50 for user activity,0.030938845822566754
-Disparity in Precision@50 for user mainstreaminess,0.005269108126389022
-Disparity in Visibility@50 for item popularity,0.9821558872305141
+Mean NDCG@50,0.10909282331599197
+Mean Recall@50,0.21469825574909868
+Mean Precision@50,0.034688524590163944
+Disparity in NDCG@50 for user activity,0.037452311088337784
+Disparity in NDCG@50 for user mainstreaminess,0.06827775181681883
+Disparity in Recall@50 for user activity,0.15954969586808754
+Disparity in Recall@50 for user mainstreaminess,0.15200166992856068
+Disparity in Precision@50 for user activity,0.031159992479789435
+Disparity in Precision@50 for user mainstreaminess,0.005396226415094345
+Disparity in Visibility@50 for item popularity,0.9823606557377049
