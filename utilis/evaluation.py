@@ -66,10 +66,14 @@ class FairnessEval:
   POP_PROPORTIONS = [0.8, 0.2]
 
 
-  def __init__(self, train_data, test_data, user_recommendations):
+  def __init__(self, train_data, test_data, user_recommendations, top_k=Eval.TOP_K):
     self.train_data = train_data
     self.test_data  = test_data
     self.user_rec   = user_recommendations
+    
+    self.top_k = top_k
+    # Truncate user_recommendations to first top_k items, in case they have more
+    self.user_rec.loc[:,'itemIds'] = self.user_rec['itemIds'].map(lambda rec: rec[:self.top_k])
     self.sanitize_input_data()
     
     self.activ_col   = None
@@ -107,7 +111,7 @@ class FairnessEval:
 
     self.get_item_popularity_membership(save_prefix=save_prefix)
     logger.info('Adding item membership info: popularity')
-    self.eval_df[f'top-{Eval.TOP_K} class'] = self.eval_df['itemIds'].map(lambda lst: [self.pop_col[int(i)] for i in lst])
+    self.eval_df[f'top-{self.top_k} class'] = self.eval_df['itemIds'].map(lambda lst: [self.pop_col[int(i)] for i in lst])
     
     return self # to make it chainable
 
@@ -120,7 +124,7 @@ class FairnessEval:
     self.add_user_history()
     logger.info('Computing user-level popularity miscalibration (JS divergence)')
     popAffinity_hist = self.eval_df['hist class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
-    popAffinity_rec = self.eval_df[f'top-{Eval.TOP_K} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
+    popAffinity_rec = self.eval_df[f'top-{self.top_k} class'].map(lambda lst: [lst.count(True)/len(lst), lst.count(False)/len(lst)])
     self.eval_df['pop affinity hist'] = popAffinity_hist
     self.eval_df['pop affinity rec'] = popAffinity_rec
     # Similar to UPD metric (but on single user-level, without group aggregation). UPD is at https://dl.acm.org/doi/pdf/10.1145/3450613.3456821
@@ -165,18 +169,18 @@ class FairnessEval:
           self.eval_df.groupby('is_mainstream')[mt].agg('mean').diff().iloc[1:].abs().squeeze()
       })
     # P-Fairness: Disparity in exposure/visibility btw item groups (popularity)
-    class_visibility = pd.Series(self.eval_df[f'top-{Eval.TOP_K} class'].sum()).value_counts(normalize=True)
+    class_visibility = pd.Series(self.eval_df[f'top-{self.top_k} class'].sum()).value_counts(normalize=True)
     aggregation.update({
-        f'Disparity in Visibility@{Eval.TOP_K} for item popularity':
+        f'Disparity in Visibility@{self.top_k} for item popularity':
         class_visibility.diff().iloc[1:].abs().squeeze(),
-        # f'Disparity in Exposure@{Eval.TOP_K} for item popularity': ...
+        # f'Disparity in Exposure@{self.top_k} for item popularity': ...
     })
     return aggregation
 
 
   def evaluate_fairness(self, metrics_cols=None, save_prefix=None):
     if metrics_cols: 
-      metrics_cols = [mt if '@' in mt else f'{mt}@{Eval.TOP_K}' for mt in metrics_cols]
+      metrics_cols = [mt if '@' in mt else f'{mt}@{self.top_k}' for mt in metrics_cols]
     os.makedirs(save_prefix, exist_ok=True)
     fairness_metrics = self.add_accuracy_metrics()  \
       .add_membership_info(save_prefix=save_prefix) \
@@ -266,14 +270,14 @@ class FairnessEval:
     # Convert test_items to a NumPy array
     test_items = np.array(test_items)
     # If the length of rec_items is greater than k, truncate to first k items
-    if len(rec_items) > Eval.TOP_K:
-        rec_items = rec_items[:Eval.TOP_K]
+    if len(rec_items) > self.top_k:
+      rec_items = rec_items[:self.top_k]
     # if len(rec_items) > len(test_items):
     #   logger.warning(f'There are more recommended items ({len(rec_items)}) than positive items ({len(test_items)})')
     user_metrics = {
       'userId': user_id,
-      f'NDCG@{Eval.TOP_K}': Eval.ndcg(rec_items, test_items),
-      f'Recall@{Eval.TOP_K}': Eval.recall(rec_items, test_items),
-      f'Precision@{Eval.TOP_K}': Eval.precision(rec_items, test_items),
+      f'NDCG@{self.top_k}': Eval.ndcg(rec_items, test_items),
+      f'Recall@{self.top_k}': Eval.recall(rec_items, test_items),
+      f'Precision@{self.top_k}': Eval.precision(rec_items, test_items),
     } 
     return pd.Series(user_metrics)
